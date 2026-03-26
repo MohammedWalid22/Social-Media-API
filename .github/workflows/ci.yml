@@ -36,7 +36,7 @@ jobs:
         redis-version: ${{ matrix.redis-version }}
         
     - name: Install dependencies
-      run: npm ci
+      run: npm install --legacy-peer-deps
       
     - name: Run ESLint
       run: npm run lint || true
