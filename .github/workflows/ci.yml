@@ -1,0 +1,51 @@
+name: Social Media API CI
+
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    
+    strategy:
+      matrix:
+        node-version: [18.x, 20.x]
+        redis-version: [7]
+        mongodb-version: ['6.0']
+
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Use Node.js ${{ matrix.node-version }}
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ matrix.node-version }}
+        cache: 'npm'
+        
+    - name: Start MongoDB
+      uses: supercharge/mongodb-github-action@1.10.0
+      with:
+        mongodb-version: ${{ matrix.mongodb-version }}
+        
+    - name: Start Redis
+      uses: supercharge/redis-github-action@1.7.0
+      with:
+        redis-version: ${{ matrix.redis-version }}
+        
+    - name: Install dependencies
+      run: npm ci
+      
+    - name: Run ESLint
+      run: npm run lint || true
+      
+    - name: Run Tests
+      # Assuming you have jest configured and a 'test' script in package.json
+      run: npm test
+      env:
+        NODE_ENV: test
+        JWT_SECRET: test_secret_key_change_me
+        MONGODB_URI: mongodb://localhost:27017/social-media-test
+        REDIS_URL: redis://localhost:6379
