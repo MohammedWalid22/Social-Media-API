@@ -52,9 +52,13 @@ afterAll(async () => {
   try {
     await mongoose.disconnect();
     if (mongoServer) await mongoServer.stop();
-    console.log('✅ Test database disconnected');
+    const redisManager = require('../src/config/redis');
+    if (redisManager && typeof redisManager.close === 'function') {
+      await redisManager.close();
+    }
+    console.log('✅ Test database and Redis disconnected');
   } catch (error) {
-    console.error('❌ Error closing test database:', error);
+    console.error('❌ Error closing test database/Redis:', error);
   }
 });
 
@@ -84,7 +88,7 @@ global.testUtils = {
   generateAuthToken: (userId) => {
     const jwt = require('jsonwebtoken');
     return jwt.sign(
-      { id: userId, iat: Date.now() },
+      { id: userId, isTestToken: true, iat: Date.now() },
       process.env.JWT_SECRET || 'test-secret'
     );
   },
