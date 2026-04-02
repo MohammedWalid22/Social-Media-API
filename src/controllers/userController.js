@@ -2,7 +2,6 @@ const User = require('../models/User');
 const Post = require('../models/Post');
 const FollowRequest = require('../models/FollowRequest');
 const cloudinary = require('../config/cloudinary');
-const logger = require('../utils/logger');
 const { AppError } = require('../middleware/errorHandler');
 const AuditLog = require('../models/AuditLog');
 const NotificationService = require('../services/notificationService'); // ✅ إضافة هذا السطر
@@ -448,7 +447,7 @@ class UserController {
 
   async muteUser(req, res, next) {
     try {
-      const { userId } = req.params;
+      // const { userId } = req.params;
       
       // TODO: Implement mute functionality
       

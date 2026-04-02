@@ -1,4 +1,5 @@
-const Post = require('../models/User');
+const mongoose = require('mongoose');
+const Post = require('../models/Post');
 const User = require('../models/User');
 const logger = require('../utils/logger');
 
@@ -76,7 +77,7 @@ class AnalyticsService {
     }
   }
 
-  async getAudienceDemographics(userId) {
+  async getAudienceDemographics() {
     // This would integrate with analytics service in production
     // Placeholder implementation
     return {

@@ -128,7 +128,7 @@ class SecurityMiddleware {
       handler: (req, res, next, options) => {
         res.status(options.statusCode).json(options.message);
       },
-      onLimitReached: (req, res, options) => {
+      onLimitReached: (req, res) => {
         logger.warn(`🚫 Rate limit exceeded for IP: ${req.ip} at ${new Date().toISOString()}`);
       },
     });

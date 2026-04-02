@@ -2,7 +2,6 @@ const Message = require('../models/Message');
 const User = require('../models/User');
 const EncryptionService = require('../services/encryptionService');
 const NotificationService = require('../services/notificationService');
-const redis = require('../config/redis');
 
 class MessageController {
   async sendMessage(req, res, next) {
@@ -278,9 +277,7 @@ class MessageController {
 
   async typingIndicator(req, res, next) {
     try {
-      const { recipientId, isTyping } = req.body;
-
-      // Ensure 'redis' is defined in your file imports if you are using it
+      // TODO: Implement typing indicator with Redis Pub/Sub
       // await redis.publish(...)
 
       res.status(200).json({ status: 'success' });

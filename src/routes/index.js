@@ -5,7 +5,6 @@ const router = express.Router();
 const authRoutes = require('./auth');
 const userRoutes = require('./users');
 const postRoutes = require('./posts');
-const commentRoutes = require('./comments');
 const feedRoutes = require('./feed');
 const messageRoutes = require('./messages');
 const notificationRoutes = require('./notifications');
