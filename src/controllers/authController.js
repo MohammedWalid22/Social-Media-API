@@ -18,15 +18,17 @@ class AuthController {
   }
 
   signToken = (id, deviceId) => {
+    const options = {
+      expiresIn: process.env.JWT_EXPIRES_IN || '90d',
+      algorithm: 'HS256',
+    };
+    if (process.env.JWT_ISSUER) options.issuer = process.env.JWT_ISSUER;
+    if (process.env.JWT_AUDIENCE) options.audience = process.env.JWT_AUDIENCE;
+
     return jwt.sign(
       { id, deviceId, iat: Date.now() },
       process.env.JWT_SECRET,
-      {
-        expiresIn: process.env.JWT_EXPIRES_IN || '90d',
-        issuer: process.env.JWT_ISSUER,
-        audience: process.env.JWT_AUDIENCE,
-        algorithm: 'HS256',
-      }
+      options
     );
   };
 

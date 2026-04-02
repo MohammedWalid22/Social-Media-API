@@ -24,12 +24,14 @@ class AuthMiddleware {
       // Set device ID from header if available
       req.deviceId = req.headers['x-device-id'] || req.body?.deviceId || 'unknown';
 
-      // 2) Verify token with strict options
-      const decoded = await promisify(jwt.verify)(token, process.env.JWT_SECRET, {
+      const options = {
         algorithms: ['HS256'],
-        issuer: process.env.JWT_ISSUER,
-        audience: process.env.JWT_AUDIENCE,
-      });
+      };
+      if (process.env.JWT_ISSUER) options.issuer = process.env.JWT_ISSUER;
+      if (process.env.JWT_AUDIENCE) options.audience = process.env.JWT_AUDIENCE;
+
+      // 2) Verify token with strict options
+      const decoded = await promisify(jwt.verify)(token, process.env.JWT_SECRET, options);
 
       // 2.5) Check if session exists and is valid
       if (!decoded.isTestToken) {
