@@ -175,9 +175,9 @@ class RedisManager {
 
   // Close connections
   async close() {
-    await this.client.quit();
-    await this.subscriber.quit();
-    await this.publisher.quit();
+    if (this.client) this.client.disconnect();
+    if (this.subscriber) this.subscriber.disconnect();
+    if (this.publisher) this.publisher.disconnect();
     logger.info('Redis connections closed');
   }
 }

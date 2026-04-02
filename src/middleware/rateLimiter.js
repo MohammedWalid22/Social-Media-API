@@ -5,17 +5,19 @@ const logger = require('../utils/logger');
 
 // Create Redis client with error handling
 let redisClient;
-try {
-  redisClient = new Redis(process.env.REDIS_URL || 'redis://localhost:6379', {
-    retryStrategy: (times) => Math.min(times * 50, 2000),
-    maxRetriesPerRequest: 3,
-  });
-  
-  redisClient.on('error', (err) => {
-    logger.error('Redis error in rate limiter:', err);
-  });
-} catch (err) {
-  logger.warn('Redis not available for rate limiting, using memory store');
+if (process.env.NODE_ENV !== 'test') {
+  try {
+    redisClient = new Redis(process.env.REDIS_URL || 'redis://localhost:6379', {
+      retryStrategy: (times) => Math.min(times * 50, 2000),
+      maxRetriesPerRequest: 3,
+    });
+    
+    redisClient.on('error', (err) => {
+      logger.error('Redis error in rate limiter:', err);
+    });
+  } catch (err) {
+    logger.warn('Redis not available for rate limiting, using memory store');
+  }
 }
 
 // Helper to create limiter with fallback
