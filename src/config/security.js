@@ -3,6 +3,7 @@ const cors = require('cors');
 const mongoSanitize = require('express-mongo-sanitize');
 const hpp = require('hpp');
 const xss = require('xss-clean');
+const logger = require('../utils/logger');
 
 class SecurityConfig {
   constructor() {
@@ -79,7 +80,7 @@ class SecurityConfig {
     this.mongoSanitize = mongoSanitize({
       replaceWith: '_',
       onSanitize: ({ req, key }) => {
-        console.warn(`⚠️  Sanitized key: ${key} from IP: ${req.ip} at ${new Date().toISOString()}`);
+        logger.warn(`⚠️  Sanitized key: ${key} from IP: ${req.ip} at ${new Date().toISOString()}`);
       },
     });
 

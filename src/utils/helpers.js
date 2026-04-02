@@ -1,4 +1,5 @@
 const crypto = require('crypto');
+const logger = require('./logger');
 
 // Use he library if available, otherwise basic escape
 let he;
@@ -102,7 +103,7 @@ const helpers = {
     try {
       return JSON.parse(JSON.stringify(obj));
     } catch (e) {
-      console.error('Deep clone failed:', e);
+      logger.error('Deep clone failed:', e);
       return obj;
     }
   },

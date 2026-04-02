@@ -1,7 +1,6 @@
 const express = require('express');
 const mongoose = require('mongoose');
 const path = require('path');
-const logger = require('./utils/logger');
 const redisManager = require('./config/redis');
 
 // Import configurations

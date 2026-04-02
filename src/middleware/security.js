@@ -4,6 +4,7 @@ const mongoSanitize = require('express-mongo-sanitize');
 const hpp = require('hpp');
 const xss = require('xss-clean');
 const rateLimit = require('express-rate-limit');
+const logger = require('../utils/logger');
 
 class SecurityMiddleware {
   constructor() {
@@ -74,7 +75,7 @@ class SecurityMiddleware {
     this.mongoSanitizeConfig = mongoSanitize({
       replaceWith: '_',
       onSanitize: ({ req, key }) => {
-        console.warn(`⚠️  Sanitized key: ${key} from IP: ${req.ip} at ${new Date().toISOString()}`);
+        logger.warn(`⚠️  Sanitized key: ${key} from IP: ${req.ip} at ${new Date().toISOString()}`);
       },
     });
 
@@ -128,7 +129,7 @@ class SecurityMiddleware {
         res.status(options.statusCode).json(options.message);
       },
       onLimitReached: (req, res, options) => {
-        console.warn(`🚫 Rate limit exceeded for IP: ${req.ip} at ${new Date().toISOString()}`);
+        logger.warn(`🚫 Rate limit exceeded for IP: ${req.ip} at ${new Date().toISOString()}`);
       },
     });
   }
@@ -156,7 +157,7 @@ class SecurityMiddleware {
     app.use(this.xssConfig);
     app.use(this.additionalHeaders);
     
-    console.log('🔒 Security middleware applied');
+    logger.info('🔒 Security middleware applied');
   }
 }
 

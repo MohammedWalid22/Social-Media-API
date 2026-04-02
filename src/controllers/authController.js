@@ -5,7 +5,6 @@ const qrcode = require('qrcode');
 const User = require('../models/User');
 const EmailService = require('../services/emailService');
 const AuditLog = require('../models/AuditLog');
-const logger = require('../utils/logger');
 
 class AuthController {
   constructor() {

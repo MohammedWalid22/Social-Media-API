@@ -1,4 +1,5 @@
 const User = require('../models/User');
+const logger = require('../utils/logger');
 
 class GamificationService {
   async addPoints(userId, points) {
@@ -34,7 +35,7 @@ class GamificationService {
       
       return badgeAdded;
     } catch (err) {
-      console.error('GamificationService Error:', err);
+      logger.error('GamificationService Error:', err);
     }
   }
 }

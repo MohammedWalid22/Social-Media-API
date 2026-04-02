@@ -1,5 +1,6 @@
 const cloudinary = require('cloudinary').v2;
 const { CloudinaryStorage } = require('multer-storage-cloudinary');
+const logger = require('../utils/logger');
 
 // Configuration
 cloudinary.config({
@@ -18,7 +19,7 @@ const storageConfigs = {
       folder: 'social-app/profiles',
       allowed_formats: ['jpg', 'jpeg', 'png', 'webp'],
       transformation: [{ width: 500, height: 500, crop: 'fill', quality: 'auto' }],
-      public_id: (req, file) => `profile_${req.user?._id || 'anonymous'}_${Date.now()}`,
+      public_id: (req) => `profile_${req.user?._id || 'anonymous'}_${Date.now()}`,
     },
   }),
 
@@ -29,7 +30,7 @@ const storageConfigs = {
       folder: 'social-app/posts',
       allowed_formats: ['jpg', 'jpeg', 'png', 'webp', 'gif'],
       transformation: [{ quality: 'auto', fetch_format: 'auto' }],
-      public_id: (req, file) => `post_${req.user?._id || 'anonymous'}_${Date.now()}`,
+      public_id: (req) => `post_${req.user?._id || 'anonymous'}_${Date.now()}`,
     },
   }),
 
@@ -44,7 +45,7 @@ const storageConfigs = {
         { quality: 'auto:good' },
         { fetch_format: 'auto' },
       ],
-      public_id: (req, file) => `video_${req.user?._id || 'anonymous'}_${Date.now()}`,
+      public_id: (req) => `video_${req.user?._id || 'anonymous'}_${Date.now()}`,
     },
   }),
 
@@ -55,7 +56,7 @@ const storageConfigs = {
       folder: 'social-app/audio',
       resource_type: 'video', // Cloudinary treats audio as video
       allowed_formats: ['mp3', 'wav', 'ogg', 'm4a', 'webm'],
-      public_id: (req, file) => `audio_${req.user?._id || 'anonymous'}_${Date.now()}`,
+      public_id: (req) => `audio_${req.user?._id || 'anonymous'}_${Date.now()}`,
     },
   }),
 
@@ -66,7 +67,7 @@ const storageConfigs = {
       folder: 'social-app/stories',
       allowed_formats: ['jpg', 'jpeg', 'png', 'mp4', 'mov'],
       transformation: [{ quality: 'auto' }],
-      public_id: (req, file) => `story_${req.user?._id || 'anonymous'}_${Date.now()}`,
+      public_id: (req) => `story_${req.user?._id || 'anonymous'}_${Date.now()}`,
     },
   }),
 };
@@ -125,7 +126,7 @@ const deleteFromCloudinary = async (publicId, resourceType = 'image') => {
     });
     return result.result === 'ok';
   } catch (error) {
-    console.error('Cloudinary delete error:', error);
+    logger.error('Cloudinary delete error:', error);
     return false;
   }
 };
@@ -138,7 +139,7 @@ const deleteMultiple = async (publicIds, resourceType = 'image') => {
     });
     return result;
   } catch (error) {
-    console.error('Bulk delete error:', error);
+    logger.error('Bulk delete error:', error);
     throw error;
   }
 };

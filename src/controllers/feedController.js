@@ -1,6 +1,5 @@
 const Post = require('../models/Post');
 const User = require('../models/User');
-const logger = require('../utils/logger');
 
 class FeedController {
   async getNewsFeed(req, res, next) {
@@ -10,7 +9,7 @@ class FeedController {
 
       const user = await User.findById(userId).select('following blockedUsers privacySettings mutedWords');
       
-      const pipeline = this.buildFeedPipeline(userId, user.following, user.blockedUsers, cursor, filter, user.privacySettings?.positivityMode, user.mutedWords);
+      const pipeline = this.buildFeedPipeline(userId, user.following, user.blockedUsers, cursor, filter, user.privacySettings?.positivityMode, user.mutedWords, limit);
       
       const posts = await Post.aggregate(pipeline).allowDiskUse(true);
       
@@ -32,7 +31,7 @@ class FeedController {
     }
   }
 
-  buildFeedPipeline(userId, following, blockedUsers, cursor, filter, positivityMode, mutedWords) {
+  buildFeedPipeline(userId, following, blockedUsers, cursor, filter, positivityMode, mutedWords, limit) {
     const matchConditions = [
       { author: { $nin: blockedUsers || [] } },
       {

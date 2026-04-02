@@ -607,9 +607,7 @@ class CommentController {
           });
           
           // Delete variants (يجب إضافة اللوجيك الخاص بك هنا لاحقاً)
-          for (const variant of audioComment.variants || []) {
-            // Extract public_id from URL and delete
-          }
+          // TODO: Delete variants extracting public_id from URL
           
           audioComment.isDeleted = true;
           audioComment.deletedAt = new Date();
