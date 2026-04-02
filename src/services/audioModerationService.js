@@ -1,7 +1,3 @@
-const ffmpeg = require('fluent-ffmpeg');
-const fs = require('fs').promises;
-const path = require('path');
-const os = require('os');
 const { LanguageServiceClient } = require('@google-cloud/language');
 
 class AudioModerationService {
@@ -96,7 +92,7 @@ class AudioModerationService {
   /**
    * Analyze audio patterns for violence indicators
    */
-  async analyzeAudioPatterns(audioUrl) {
+  async analyzeAudioPatterns() {
     // Implementation would analyze volume levels, frequency patterns
     // to detect screaming, gunshots, etc.
     return {

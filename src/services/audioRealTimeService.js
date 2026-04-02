@@ -1,5 +1,4 @@
 const { Server } = require('socket.io');
-const ffmpeg = require('fluent-ffmpeg');
 const fs = require('fs');
 const path = require('path');
 const os = require('os');
@@ -258,35 +257,30 @@ class AudioRealTimeService {
   }
 
   async processRecordedAudio(session, user) {
-    try {
-      // Process with AudioProcessingService
-      const processed = await AudioProcessingService.processAudio(
-        session.tempFile,
-        { bitrate: this.getBitrateForQuality(session.quality) }
-      );
+    // Process with AudioProcessingService
+    const processed = await AudioProcessingService.processAudio(
+      session.tempFile,
+      { bitrate: this.getBitrateForQuality(session.quality) }
+    );
 
-      // Upload to cloudinary
-      const uploadResult = await cloudinary.uploader.upload(session.tempFile, {
-        folder: 'audio-comments',
-        resource_type: 'video', // Cloudinary treats audio as video
-        public_id: `audio_${user._id}_${Date.now()}`,
-      });
+    // Upload to cloudinary
+    const uploadResult = await cloudinary.uploader.upload(session.tempFile, {
+      folder: 'audio-comments',
+      resource_type: 'video', // Cloudinary treats audio as video
+      public_id: `audio_${user._id}_${Date.now()}`,
+    });
 
-      return {
-        url: uploadResult.secure_url,
-        publicId: uploadResult.public_id,
-        duration: processed.duration,
-        format: 'mp3',
-        size: processed.size,
-        bitrate: processed.bitrate,
-        waveformData: processed.waveformData,
-        variants: processed.variants,
-        textAccompaniment: session.textAccompaniment,
-      };
-
-    } catch (error) {
-      throw error;
-    }
+    return {
+      url: uploadResult.secure_url,
+      publicId: uploadResult.public_id,
+      duration: processed.duration,
+      format: 'mp3',
+      size: processed.size,
+      bitrate: processed.bitrate,
+      waveformData: processed.waveformData,
+      variants: processed.variants,
+      textAccompaniment: session.textAccompaniment,
+    };
   }
 
   async requestLiveTranscription(socket) {

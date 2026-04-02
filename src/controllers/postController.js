@@ -457,9 +457,10 @@ class PostController {
       case 'public':
         return true;
       case 'friends':
-      case 'followers':
+      case 'followers': {
         const author = await User.findById(authorId).select('followers');
         return author?.followers?.some(id => id.toString() === userId);
+      }
       case 'private':
         return false;
       case 'custom':

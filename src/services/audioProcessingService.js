@@ -99,7 +99,7 @@ class AudioProcessingService {
   /**
    * Generate waveform data for visualization
    */
-  async generateWaveform(audioPath) {
+  async generateWaveform() {
     // Simplified version - returns dummy data for now
     // In production, use audiowaveform or similar
     return Array(100).fill(0).map(() => Math.floor(Math.random() * 100));
@@ -163,7 +163,7 @@ class AudioProcessingService {
   /**
    * Analyze voice characteristics (placeholder)
    */
-  async analyzeVoice(audioPath) {
+  async analyzeVoice() {
     // TODO: Implement voice analysis
     return {
       gender: 'unknown',
