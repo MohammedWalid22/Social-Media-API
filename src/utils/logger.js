@@ -47,7 +47,8 @@ const logger = winston.createLogger({
 });
 
 // Custom formatter: converts Error objects and plain objects to readable strings
-const readableFormat = winston.format.printf(({ level, message, timestamp, stack, ...meta }) => {
+const readableFormat = winston.format.printf((info) => {
+  let { level, message, timestamp, stack, ...meta } = info;
   // If message is an Error object
   if (message instanceof Error) {
     return `${level}: ${message.message}${message.stack ? '\n' + message.stack : ''}`;
@@ -61,7 +62,8 @@ const readableFormat = winston.format.printf(({ level, message, timestamp, stack
     ? '\n' + JSON.stringify(meta, null, 2)
     : '';
   const stackTrace = stack ? '\n' + stack : '';
-  return `${level}: ${message}${stackTrace}${extras}`;
+  const timeStr = timestamp ? `[${timestamp}] ` : '';
+  return `${timeStr}${level}: ${message}${stackTrace}${extras}`;
 });
 
 if (process.env.NODE_ENV !== 'production') {

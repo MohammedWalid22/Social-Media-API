@@ -1,3 +1,4 @@
+/* eslint-disable no-unused-vars */
 const { generateToken, hashToken } = require('../src/utils/crypto');
 const { 
   generateId, 

@@ -4,7 +4,7 @@ const logger = require('../utils/logger');
 
 class SearchService {
   async search(query, type = 'all', options = {}) {
-    const { page = 1, limit = 20, userId } = options;
+    const { page = 1, limit = 20 } = options;
     const skip = (page - 1) * limit;
 
     const results = { users: [], posts: [], hashtags: [] };
@@ -17,7 +17,7 @@ class SearchService {
 
       // Search posts
       if (type === 'all' || type === 'posts') {
-        results.posts = await this.searchPosts(query, { skip, limit, userId });
+        results.posts = await this.searchPosts(query, { skip, limit });
       }
 
       // Search hashtags
@@ -56,7 +56,7 @@ class SearchService {
       .select('username displayName avatar isVerified followers');
   }
 
-  async searchPosts(query, { skip, limit, userId }) {
+  async searchPosts(query, { skip, limit }) {
     return await Post.find(
       {
         $and: [
@@ -116,7 +116,7 @@ class SearchService {
   }
 
   async searchByHashtag(hashtag, options = {}) {
-    const { page = 1, limit = 20, userId } = options;
+    const { page = 1, limit = 20 } = options;
     const skip = (page - 1) * limit;
 
     const cleanHashtag = hashtag.toLowerCase().replace(/^#/, '');

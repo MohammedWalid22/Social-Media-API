@@ -1,11 +1,8 @@
 const request = require('supertest');
-const mongoose = require('mongoose');
 const app = require('../src/app');
 const User = require('../src/models/User');
 
 describe('Auth Endpoints', () => {
-  let testUser;
-  
   beforeEach(async () => {
     // Clean up
     await User.deleteMany({});
@@ -69,7 +66,7 @@ describe('Auth Endpoints', () => {
 
   describe('POST /api/v1/auth/login', () => {
     beforeEach(async () => {
-      testUser = await User.create({
+      await User.create({
         email: 'login@test.com',
         password: 'Password123!',
         username: 'logintest',

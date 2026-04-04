@@ -15,7 +15,7 @@ class ContentModeration {
     }
   }
 
-  async analyze(text, media = []) {
+  async analyze(text) {
     const result = {
       severity: 'low', // low, medium, high
       score: 0,

@@ -1,3 +1,5 @@
+/* eslint-disable no-unused-vars */
+/* eslint-disable no-unused-vars */
 const request = require('supertest');
 const mongoose = require('mongoose');
 const app = require('../src/app');

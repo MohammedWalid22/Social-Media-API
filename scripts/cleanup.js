@@ -1,5 +1,7 @@
+/* eslint-disable no-unused-vars, no-undef, no-console */
 const mongoose = require('mongoose');
 const cron = require('node-cron');
+require('dotenv').config();
 const Post = require('../src/models/Post');
 const Story = require('../src/models/Story');
 const AuditLog = require('../src/models/AuditLog');

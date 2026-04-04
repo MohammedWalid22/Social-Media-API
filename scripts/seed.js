@@ -1,3 +1,4 @@
+/* eslint-disable no-unused-vars, no-console */
 const mongoose = require('mongoose');
 const bcrypt = require('bcryptjs');
 const { faker } = require('@faker-js/faker');

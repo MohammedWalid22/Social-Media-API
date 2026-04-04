@@ -10,7 +10,6 @@ const fs = require('fs');
 describe('Audio Features', () => {
   let token;
   let postId;
-  let userId;
 
   beforeEach(async () => {
     await User.deleteMany({});
@@ -26,7 +25,6 @@ describe('Audio Features', () => {
       });
 
     token = signupRes.body.token;
-    userId = signupRes.body.data.user._id;
 
     const postRes = await request(app)
       .post('/api/v1/posts')

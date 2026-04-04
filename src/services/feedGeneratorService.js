@@ -19,7 +19,7 @@ class FeedGeneratorService {
 
       const user = await User.findById(userId).select('following blockedUsers interests');
       
-      const pipeline = this.buildFeedPipeline(userId, user, cursor, filter);
+      const pipeline = this.buildFeedPipeline(userId, user, cursor, filter, limit);
       
       let posts = await Post.aggregate(pipeline).allowDiskUse(true);
 
@@ -51,7 +51,7 @@ class FeedGeneratorService {
     }
   }
 
-  buildFeedPipeline(userId, user, cursor, filter) {
+  buildFeedPipeline(userId, user, cursor, filter, limit) {
     const matchStage = {
       $match: {
         $and: [
@@ -200,7 +200,6 @@ class FeedGeneratorService {
   }
 
   async invalidateCache(userId) {
-    const pattern = `feed:${userId}:*`;
     // Note: This requires Redis scan, simplified here
     await redis.delete(`feed:${userId}:all:initial`);
     await redis.delete(`feed:${userId}:following:initial`);

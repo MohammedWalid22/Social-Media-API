@@ -2,6 +2,7 @@
  * One-time migration script to fix the parallel array index issue on the users collection.
  * Run with: node scripts/fix-user-indexes.js
  */
+/* eslint-disable no-console */
 require('dotenv').config({ path: './.env' });
 const mongoose = require('mongoose');
 
