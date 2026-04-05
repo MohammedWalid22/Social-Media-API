@@ -63,10 +63,11 @@ class FeedGeneratorService {
       },
     };
 
+    const safeFollowing = user.following || [];
     // Visibility rules
     const visibilityRules = [
       { visibility: 'public' },
-      { author: { $in: user.following }, visibility: { $in: ['friends', 'followers'] } },
+      { author: { $in: safeFollowing }, visibility: { $in: ['friends', 'followers'] } },
       { author: userId }, // Own posts
     ];
 
@@ -87,7 +88,7 @@ class FeedGeneratorService {
 
     // Filter specific
     if (filter === 'following') {
-      matchStage.$match.$and.push({ author: { $in: user.following } });
+      matchStage.$match.$and.push({ author: { $in: safeFollowing } });
     }
 
     const pipeline = [
@@ -130,7 +131,7 @@ class FeedGeneratorService {
                 hoursOld: {
                   $divide: [{ $subtract: [new Date(), '$createdAt'] }, 3600000],
                 },
-                isFollowing: { $in: ['$author._id', user.following] },
+                isFollowing: { $in: ['$author._id', safeFollowing] },
                 engagement: {
                   $add: [
                     { $multiply: ['$likesCount', 1] },
@@ -187,10 +188,10 @@ class FeedGeneratorService {
         in: {
           $switch: {
             branches: [
-              { case: { $in: [userId, '$$reactions.love'] }, then: 'love' },
-              { case: { $in: [userId, '$$reactions.laugh'] }, then: 'laugh' },
-              { case: { $in: [userId, '$$reactions.angry'] }, then: 'angry' },
-              { case: { $in: [userId, '$$reactions.sad'] }, then: 'sad' },
+              { case: { $in: [userId, { $ifNull: ['$$reactions.love', []] }] }, then: 'love' },
+              { case: { $in: [userId, { $ifNull: ['$$reactions.laugh', []] }] }, then: 'laugh' },
+              { case: { $in: [userId, { $ifNull: ['$$reactions.angry', []] }] }, then: 'angry' },
+              { case: { $in: [userId, { $ifNull: ['$$reactions.sad', []] }] }, then: 'sad' },
             ],
             default: null,
           },

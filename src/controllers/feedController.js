@@ -32,12 +32,13 @@ class FeedController {
   }
 
   buildFeedPipeline(userId, following, blockedUsers, cursor, filter, positivityMode, mutedWords, limit) {
+    const safeFollowing = following || [];
     const matchConditions = [
       { author: { $nin: blockedUsers || [] } },
       {
         $or: [
           { visibility: 'public' },
-          { author: { $in: following }, visibility: { $in: ['friends', 'followers'] } },
+          { author: { $in: safeFollowing }, visibility: { $in: ['friends', 'followers'] } },
           { author: userId },
         ],
       },
@@ -105,10 +106,10 @@ class FeedController {
               in: {
                 $switch: {
                   branches: [
-                    { case: { $in: [userId, '$$reactions.love'] }, then: 'love' },
-                    { case: { $in: [userId, '$$reactions.laugh'] }, then: 'laugh' },
-                    { case: { $in: [userId, '$$reactions.angry'] }, then: 'angry' },
-                    { case: { $in: [userId, '$$reactions.sad'] }, then: 'sad' },
+                    { case: { $in: [userId, { $ifNull: ['$$reactions.love', []] }] }, then: 'love' },
+                    { case: { $in: [userId, { $ifNull: ['$$reactions.laugh', []] }] }, then: 'laugh' },
+                    { case: { $in: [userId, { $ifNull: ['$$reactions.angry', []] }] }, then: 'angry' },
+                    { case: { $in: [userId, { $ifNull: ['$$reactions.sad', []] }] }, then: 'sad' },
                   ],
                   default: null,
                 },
@@ -128,7 +129,7 @@ class FeedController {
                     3600000, 
                   ],
                 },
-                isFollowing: { $in: ['$author._id', following] },
+                isFollowing: { $in: ['$author._id', safeFollowing] },
                 engagement: {
                   $add: [
                     { $multiply: ['$likesCount', 1] },
@@ -246,6 +247,10 @@ class FeedController {
   async getNearbyPosts(req, res, next) {
     try {
       const { longitude, latitude, radius = 5000 } = req.query; 
+
+      if (!longitude || !latitude) {
+        return res.status(400).json({ status: 'fail', message: 'Please provide longitude and latitude' });
+      }
       
       const posts = await Post.aggregate([
         {
