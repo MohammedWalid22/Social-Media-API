@@ -86,11 +86,25 @@ global.testUtils = {
     });
   },
   
-  generateAuthToken: (userId) => {
+  generateAuthToken: async (userId) => {
     const jwt = require('jsonwebtoken');
-    return jwt.sign(
-      { id: userId, isTestToken: true, iat: Date.now() },
+    const Session = require('../src/models/Session');
+    
+    const token = jwt.sign(
+      { id: userId, isTestToken: true, iat: Math.floor(Date.now() / 1000) },
       process.env.JWT_SECRET || 'test-secret'
     );
+    
+    // Create a valid session for the test token
+    await Session.create({
+      user: userId,
+      deviceInfo: 'Test Environment',
+      ip: '127.0.0.1',
+      token,
+      isValid: true,
+      createdAt: new Date(),
+    });
+    
+    return token;
   },
 };

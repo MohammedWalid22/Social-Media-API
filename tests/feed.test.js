@@ -24,6 +24,15 @@ describe('Feed Endpoints', () => {
     token = signupRes.body.token;
     userId = signupRes.body.data.user._id;
 
+    // Create a session for the signup token so subsequent requests work
+    const Session = require('../src/models/Session');
+    await Session.create({
+      user: userId,
+      token,
+      isValid: true,
+      createdAt: new Date(),
+    });
+
     // Create some posts
     for (let i = 0; i < 5; i++) {
       await request(app)
