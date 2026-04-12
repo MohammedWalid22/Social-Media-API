@@ -42,7 +42,7 @@ describe('Feed Endpoints', () => {
         .get('/api/v1/feed/newsfeed')
         .set('Authorization', `Bearer ${token}`);
       
-      expect(res.statusCode).toBe(200);
+      if (res.statusCode !== 200) console.error(res.body); expect(res.statusCode).toBe(200);
       expect(res.body.data.posts.length).toBeGreaterThan(0);
     });
 
@@ -68,7 +68,7 @@ describe('Feed Endpoints', () => {
         .get('/api/v1/feed/trending')
         .set('Authorization', `Bearer ${token}`);
       
-      expect(res.statusCode).toBe(200);
+      if (res.statusCode !== 200) console.error(res.body); expect(res.statusCode).toBe(200);
       expect(res.body.data.trending).toBeDefined();
     });
 
@@ -77,7 +77,7 @@ describe('Feed Endpoints', () => {
         .get('/api/v1/feed/trending?timeframe=24h')
         .set('Authorization', `Bearer ${token}`);
       
-      expect(res.statusCode).toBe(200);
+      if (res.statusCode !== 200) console.error(res.body); expect(res.statusCode).toBe(200);
     });
   });
 
@@ -100,7 +100,7 @@ describe('Feed Endpoints', () => {
         .get('/api/v1/feed/nearby?longitude=-73.9857&latitude=40.7484&radius=5000')
         .set('Authorization', `Bearer ${token}`);
       
-      expect(res.statusCode).toBe(200);
+      if (res.statusCode !== 200) console.error(res.body); expect(res.statusCode).toBe(200);
       expect(res.body.data.posts.length).toBeGreaterThan(0);
     });
 

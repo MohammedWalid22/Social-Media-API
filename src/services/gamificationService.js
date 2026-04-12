@@ -35,6 +35,10 @@ class GamificationService {
       
       return badgeAdded;
     } catch (err) {
+      if (err.name === 'DocumentNotFoundError' || err.name === 'VersionError') {
+        // Silently ignore during concurrent updates or test teardown
+        return;
+      }
       logger.error('GamificationService Error:', err);
     }
   }

@@ -70,11 +70,16 @@ class AuthController {
         });
       }
 
+      const EncryptionService = require('../services/encryptionService');
+      const { publicKey, privateKey } = EncryptionService.generateKeyPair();
+
       const newUser = await User.create({
         email,
         password,
         username: username.toLowerCase(),
         displayName,
+        publicKey,
+        privateKey,
         dataConsent: {
           given: true,
           date: new Date(),

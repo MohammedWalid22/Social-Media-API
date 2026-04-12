@@ -96,7 +96,7 @@ class FeedController {
       {
         $addFields: {
           isLiked: {
-            $in: [userId, '$likes.user'],
+            $in: [userId, { $ifNull: ['$likes.user', []] }],
           },
           userReaction: {
             $let: {

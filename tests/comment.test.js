@@ -109,7 +109,7 @@ describe('Comment Endpoints', () => {
     });
   });
 
-  describe('POST /api/v1/comments/:commentId/like', () => {
+  describe('POST /api/v1/comments/:commentId/react', () => {
     let commentId;
 
     beforeEach(async () => {
@@ -121,13 +121,14 @@ describe('Comment Endpoints', () => {
       commentId = commentRes.body.data.comment._id;
     });
 
-    it('should like a comment', async () => {
+    it('should react to a comment', async () => {
       const res = await request(app)
-        .post(`/api/v1/comments/${commentId}/like`)
-        .set('Authorization', `Bearer ${token}`);
+        .post(`/api/v1/comments/${commentId}/react`)
+        .set('Authorization', `Bearer ${token}`)
+        .send({ reaction: 'like' });
       
       expect(res.statusCode).toBe(200);
-      expect(res.body.data.likesCount).toBe(1);
+      expect(res.body.data.reactionsCount).toBe(1);
     });
   });
 });

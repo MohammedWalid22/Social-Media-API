@@ -33,6 +33,10 @@ describe('Message Endpoints', () => {
       });
     token2 = signup2.body.token;
     userId2 = signup2.body.data.user._id;
+
+    // Mutual follow to allow messaging (default privacy is 'friends')
+    await User.findByIdAndUpdate(userId1, { $push: { following: userId2, followers: userId2 } });
+    await User.findByIdAndUpdate(userId2, { $push: { following: userId1, followers: userId1 } });
   });
 
   describe('POST /api/v1/messages', () => {

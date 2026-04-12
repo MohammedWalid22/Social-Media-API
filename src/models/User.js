@@ -100,6 +100,8 @@ role: {
   // Security
   twoFactorSecret: { type: String, select: false },
   twoFactorEnabled: { type: Boolean, default: false },
+  publicKey: { type: String }, // E2E Encryption Public Key
+  privateKey: { type: String, select: false }, // E2E Encryption Private Key (Simulated, should be client-side usually)
   loginAttempts: { type: Number, default: 0 },
   lockUntil: { type: Number },
   passwordChangedAt: Date,

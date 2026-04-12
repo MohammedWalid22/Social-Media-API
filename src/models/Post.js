@@ -98,8 +98,15 @@ moderatedAt: Date,
   
   // ميزة مبتكرة: Geo-location (اختياري)
   location: {
-    geoType: { type: String },  // GeoJSON type (e.g. 'Point') — renamed to avoid Mongoose conflict
-    coordinates: { type: [Number], default: undefined },
+    type: {
+      type: String,
+      enum: ['Point'],
+      default: 'Point'
+    },
+    coordinates: {
+      type: [Number], // [longitude, latitude]
+      default: undefined
+    },
     name: String,
     city: String,
     country: String,
@@ -159,8 +166,8 @@ moderatedAt: Date,
 // Indexes for Feed Performance
 postSchema.index({ createdAt: -1, author: 1 });
 postSchema.index({ hashtags: 1, createdAt: -1 });
-// 2dsphere index is omitted — add it manually in production after ensuring all location docs have coordinates
-// postSchema.index({ location: '2dsphere' }, { sparse: true });
+// 2dsphere index for location
+postSchema.index({ location: '2dsphere' }, { sparse: true });
 postSchema.index({ 'poll.endDate': 1 });
 postSchema.index({ expiresAt: 1 }, { expireAfterSeconds: 0 }); // TTL for stories
 
