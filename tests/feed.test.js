@@ -29,6 +29,8 @@ describe('Feed Endpoints', () => {
     await Session.create({
       user: userId,
       token,
+      deviceInfo: 'Test Device',
+      ip: '127.0.0.1',
       isValid: true,
       createdAt: new Date(),
     });
