@@ -31,7 +31,6 @@ class FeedController {
       });
       
     } catch (error) {
-      console.error('getNewsFeed ERROR:', error);
       next(error);
     }
   }

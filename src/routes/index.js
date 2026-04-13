@@ -18,7 +18,9 @@ const groupRoutes = require('./groups');
 router.use('/auth', authRoutes);
 router.use('/users', userRoutes);
 router.use('/posts', postRoutes);
-// Comments are mounted under posts as /posts/:postId/comments
+// Comments are mounted under posts as /posts/:postId/comments, but also standalone for direct comment actions
+const commentRoutes = require('./comments');
+router.use('/comments', commentRoutes);
 router.use('/feed', feedRoutes);
 router.use('/messages', messageRoutes);
 router.use('/notifications', notificationRoutes);
