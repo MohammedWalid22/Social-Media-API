@@ -13,9 +13,13 @@ class FeedController {
       
       const posts = await Post.aggregate(pipeline).allowDiskUse(true);
       
-      const nextCursor = posts.length === parseInt(limit) 
-        ? posts[posts.length - 1].createdAt.toISOString() 
-        : null;
+      let nextCursor = null;
+      if (posts.length > parseInt(limit)) {
+        posts.pop();
+        nextCursor = posts[posts.length - 1].createdAt.toISOString();
+      } else if (posts.length > 0 && posts.length === parseInt(limit)) {
+        nextCursor = posts[posts.length - 1].createdAt.toISOString();
+      }
 
       res.status(200).json({
         status: 'success',
@@ -27,6 +31,7 @@ class FeedController {
       });
       
     } catch (error) {
+      console.error('getNewsFeed ERROR:', error);
       next(error);
     }
   }

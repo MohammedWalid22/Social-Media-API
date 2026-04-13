@@ -30,7 +30,7 @@ router.get('/newsfeed',
   rateLimiter.api,
   validators.feedFilter,
   cache(60),
-  feedController.getNewsFeed
+  (req, res, next) => feedController.getNewsFeed(req, res, next)
 );
 
 /**
@@ -47,7 +47,7 @@ router.get('/newsfeed',
  */
 router.get('/trending', 
   auth.protect,
-  feedController.getTrending
+  (req, res, next) => feedController.getTrending(req, res, next)
 );
 
 /**
@@ -64,7 +64,7 @@ router.get('/trending',
  */
 router.get('/nearby',
   auth.protect,
-  feedController.getNearbyPosts
+  (req, res, next) => feedController.getNearbyPosts(req, res, next)
 );
 
 /**
@@ -82,7 +82,7 @@ router.get('/nearby',
 router.get('/suggested-users',
   auth.protect,
   validators.pagination,
-  feedController.getSuggestedUsers
+  (req, res, next) => feedController.getSuggestedUsers(req, res, next)
 );
 
 /**
@@ -100,7 +100,7 @@ router.get('/suggested-users',
 router.get('/suggested-posts',
   auth.protect,
   validators.pagination,
-  feedController.getSuggestedPosts
+  (req, res, next) => feedController.getSuggestedPosts(req, res, next)
 );
 
 module.exports = router;

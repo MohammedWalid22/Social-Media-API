@@ -22,7 +22,7 @@ const errorHandler = (err, req, res, next) => {
     ip: req.ip,
   });
 
-  if (process.env.NODE_ENV === 'development') {
+  if (process.env.NODE_ENV === 'development' || process.env.NODE_ENV === 'test') {
     res.status(err.statusCode).json({
       status: err.status,
       error: err,
