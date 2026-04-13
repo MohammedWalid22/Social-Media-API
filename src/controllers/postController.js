@@ -445,7 +445,8 @@ class PostController {
     if (!user) return post.visibility === 'public';
     
     const userId = user._id.toString();
-    const authorId = post.author.toString();
+    // author may be populated (object) or just an ObjectId
+    const authorId = post.author?._id ? post.author._id.toString() : post.author.toString();
 
     // Author can always view
     if (userId === authorId) return true;

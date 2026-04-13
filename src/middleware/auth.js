@@ -34,12 +34,15 @@ class AuthMiddleware {
       const decoded = await promisify(jwt.verify)(token, process.env.JWT_SECRET, options);
 
       // 2.5) Check if session exists and is valid
-      if (!decoded.isTestToken && process.env.NODE_ENV !== 'test') {
-        const Session = require('../models/Session');
-        const session = await Session.findOne({ token, isValid: true });
-        if (!session) {
-          return next(new AppError('Session expired or invalid. Please log in again.', 401));
-        }
+      const Session = require('../models/Session');
+      const session = await Session.findOne({ token });
+      if (session && !session.isValid) {
+        // Explicitly invalidated session (e.g. logout-all) — always reject
+        return next(new AppError('Session expired or invalid. Please log in again.', 401));
+      }
+      if (!session && !decoded.isTestToken && process.env.NODE_ENV !== 'test') {
+        // No session found — only enforce in production/dev (not test)
+        return next(new AppError('Session expired or invalid. Please log in again.', 401));
       }
 
       // 3) Check if user still exists

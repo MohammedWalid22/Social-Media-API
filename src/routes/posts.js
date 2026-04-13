@@ -102,20 +102,20 @@ router.post('/',
 router.get('/:postId', 
   auth.protect, 
   validators.objectId('postId'),
-  postController.getPost
+  (req, res, next) => postController.getPost(req, res, next)
 );
 
 router.patch('/:postId', 
   auth.protect, 
   rateLimiter.post,
   validators.objectId('postId'),
-  postController.updatePost
+  (req, res, next) => postController.updatePost(req, res, next)
 );
 
 router.delete('/:postId', 
   auth.protect, 
   validators.objectId('postId'),
-  postController.deletePost
+  (req, res, next) => postController.deletePost(req, res, next)
 );
 
 /**
@@ -140,7 +140,7 @@ router.post('/:postId/like',
   auth.protect, 
   rateLimiter.api,
   validators.objectId('postId'),
-  postController.likePost
+  (req, res, next) => postController.likePost(req, res, next)
 );
 
 /**
@@ -165,26 +165,26 @@ router.post('/:postId/share',
   auth.protect, 
   rateLimiter.api,
   validators.objectId('postId'),
-  postController.sharePost
+  (req, res, next) => postController.sharePost(req, res, next)
 );
 
 router.post('/:postId/co-authors/respond',
   auth.protect,
   validators.objectId('postId'),
-  postController.respondToCoAuthorRequest
+  (req, res, next) => postController.respondToCoAuthorRequest(req, res, next)
 );
 
 // Mount comment routes - supports both text and audio comments
 router.post('/:postId/save', 
   auth.protect, 
   validators.objectId('postId'),
-  postController.savePost
+  (req, res, next) => postController.savePost(req, res, next)
 );
 
 router.delete('/:postId/save', 
   auth.protect, 
   validators.objectId('postId'),
-  postController.unsavePost
+  (req, res, next) => postController.unsavePost(req, res, next)
 );
 
 router.use('/:postId/comments', commentRoutes);

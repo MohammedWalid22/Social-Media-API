@@ -24,11 +24,14 @@ class AuthController {
     if (process.env.JWT_ISSUER) options.issuer = process.env.JWT_ISSUER;
     if (process.env.JWT_AUDIENCE) options.audience = process.env.JWT_AUDIENCE;
 
-    return jwt.sign(
-      { id, deviceId, iat: Date.now() },
-      process.env.JWT_SECRET,
-      options
-    );
+    const payload = {
+      id,
+      deviceId,
+      iat: Date.now(),
+      ...(process.env.NODE_ENV === 'test' && { isTestToken: true }),
+    };
+
+    return jwt.sign(payload, process.env.JWT_SECRET, options);
   };
 
   createSendToken = async (user, statusCode, req, res) => {
