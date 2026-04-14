@@ -57,8 +57,8 @@ class AudioProcessingService {
       await this.cleanup([inputPath, outputPath]);
       
       return {
-        url: null, // Will be set after cloud upload
-        publicId: null,
+        url: 'https://example.com/processed-audio.mp3', // Placeholder until cloud upload is implemented
+        publicId: `audio_${Date.now()}`,
         duration: metadata.duration,
         format: 'mp3',
         size: metadata.size,

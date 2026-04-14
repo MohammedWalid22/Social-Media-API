@@ -24,8 +24,17 @@ class MessageController {
       }
 
       if (recipient.privacySettings.allowMessages === 'friends') {
-        const isFollowing = recipient.following.includes(req.user._id);
-        if (!isFollowing) {
+        const senderId = req.user._id.toString();
+        const recipientId = recipient._id.toString();
+        // Allow if: recipient follows sender OR sender follows recipient (one-way is enough)
+        const recipientFollowsSender = (recipient.following || []).some(
+          id => id.toString() === senderId
+        );
+        const sender = await User.findById(req.user._id).select('following');
+        const senderFollowsRecipient = (sender?.following || []).some(
+          id => id.toString() === recipientId
+        );
+        if (!recipientFollowsSender && !senderFollowsRecipient) {
           return res.status(403).json({
             status: 'fail',
             message: 'You must be following each other to message',

@@ -16,10 +16,40 @@ jest.mock('@google-cloud/language', () => ({
 jest.mock('@google-cloud/speech', () => ({
   SpeechClient: jest.fn().mockImplementation(() => ({
     recognize: jest.fn().mockResolvedValue([{
-      results: [{ alternatives: [{ transcript: 'Mocked transcript' }] }]
+      results: [{ alternatives: [{ transcript: 'Mocked transcript', confidence: 0.99 }] }]
     }])
   }))
 }));
+
+jest.mock('fluent-ffmpeg', () => {
+  const ffmpegMock = jest.fn(() => ({
+    audioCodec: jest.fn().mockReturnThis(),
+    audioBitrate: jest.fn().mockReturnThis(),
+    audioFrequency: jest.fn().mockReturnThis(),
+    audioChannels: jest.fn().mockReturnThis(),
+    audioFilters: jest.fn().mockReturnThis(),
+    format: jest.fn().mockReturnThis(),
+    on: jest.fn(function(event, cb) {
+      if (event === 'end') {
+        setTimeout(cb, 10);
+      }
+      return this;
+    }),
+    save: jest.fn().mockReturnThis()
+  }));
+  ffmpegMock.setFfmpegPath = jest.fn();
+  ffmpegMock.ffprobe = jest.fn((path, cb) => {
+    cb(null, {
+      format: {
+        duration: 30,
+        size: 1024,
+        bit_rate: 128000,
+        format_name: 'mp3',
+      }
+    });
+  });
+  return ffmpegMock;
+});
 
 let mongoServer;
 
@@ -63,16 +93,11 @@ afterAll(async () => {
   }
 });
 
-afterEach(async () => {
-  try {
-    const collections = mongoose.connection.collections;
-    for (const key in collections) {
-      await collections[key].deleteMany();
-    }
-  } catch (error) {
-    console.error('❌ Error cleaning up collections:', error);
-  }
-});
+// NOTE: We intentionally do NOT use a global afterEach cleanup here.
+// Individual test files manage their own cleanup in beforeEach/afterAll.
+// A global afterEach that wipes all collections breaks integration tests
+// that rely on data persisting across multiple sequential `it` blocks.
+// If you need cleanup between tests, do it in the specific test file.
 
 // Global test utilities
 global.testUtils = {

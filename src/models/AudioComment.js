@@ -71,7 +71,12 @@ const audioCommentSchema = new mongoose.Schema({
 });
 
 // Index for transcription search
-audioCommentSchema.index({ 'transcription.text': 'text' });
+// language_override: 'none' prevents MongoDB from using the 'language' field
+// as a language override, which caused errors with 'auto-detected' value
+audioCommentSchema.index(
+  { 'transcription.text': 'text' },
+  { language_override: 'none' }
+);
 
 // Virtual for formatted duration
 audioCommentSchema.virtual('formattedDuration').get(function() {

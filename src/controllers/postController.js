@@ -472,13 +472,18 @@ class PostController {
   }
 
   getUserReaction(post, userId) {
-    if (!userId) return null;
+    if (!userId || !post.reactions) return null;
     const userIdStr = userId.toString();
     
-    for (const [reaction, users] of Object.entries(post.reactions)) {
-      if (users.some(id => id.toString() === userIdStr)) {
-        return reaction;
+    try {
+      const reactions = post.reactions.toObject ? post.reactions.toObject() : post.reactions;
+      for (const [reaction, users] of Object.entries(reactions)) {
+        if (Array.isArray(users) && users.some(id => id.toString() === userIdStr)) {
+          return reaction;
+        }
       }
+    } catch (e) {
+      return null;
     }
     return null;
   }
