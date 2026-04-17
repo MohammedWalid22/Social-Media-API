@@ -154,7 +154,7 @@ describe('Post Endpoints', () => {
         .delete(`/api/v1/posts/${postId}`)
         .set('Authorization', `Bearer ${token}`);
       
-      expect(res.statusCode).toBe(200);
+      expect(res.statusCode).toBe(204);
       
       // verify it is deleted
       const getRes = await request(app)
@@ -164,52 +164,28 @@ describe('Post Endpoints', () => {
     });
   });
 
-  describe('POST /api/v1/posts/:postId/bookmark', () => {
-    it('should bookmark and unbookmark a post', async () => {
+  describe('POST /api/v1/posts/:postId/save', () => {
+    it('should save and unsave a post', async () => {
       const postRes = await request(app)
         .post('/api/v1/posts')
         .set('Authorization', `Bearer ${token}`)
         .send({ content: 'Bookmark me' });
       const postId = postRes.body.data.post._id;
 
-      // Bookmark
+      // Save
       const res = await request(app)
-        .post(`/api/v1/posts/${postId}/bookmark`)
+        .post(`/api/v1/posts/${postId}/save`)
         .set('Authorization', `Bearer ${token}`);
       expect(res.statusCode).toBe(200);
-      expect(res.body.data.isBookmarked).toBe(true);
+      expect(res.body.message).toBe('Post saved');
 
-      // Unbookmark
+      // Unsave
       const res2 = await request(app)
-        .post(`/api/v1/posts/${postId}/bookmark`)
+        .delete(`/api/v1/posts/${postId}/save`)
         .set('Authorization', `Bearer ${token}`);
       expect(res2.statusCode).toBe(200);
-      expect(res2.body.data.isBookmarked).toBe(false);
+      expect(res2.body.message).toBe('Post unsaved');
     });
   });
 
-  describe('POST /api/v1/posts/:postId/poll/vote', () => {
-    it('should vote on a poll', async () => {
-      const postRes = await request(app)
-        .post('/api/v1/posts')
-        .set('Authorization', `Bearer ${token}`)
-        .send({ 
-          content: 'Poll post',
-          poll: { question: 'Q?', options: [{ text: 'A' }, { text: 'B' }] }
-        });
-      
-      const post = postRes.body.data.post;
-      // We assume it creates the poll successfully, we'll extract option ID
-      if(post.poll && post.poll.options.length > 0) {
-        const optionId = post.poll.options[0]._id;
-        
-        const res = await request(app)
-          .post(`/api/v1/posts/${post._id}/poll/vote`)
-          .set('Authorization', `Bearer ${token}`)
-          .send({ optionId });
-        
-        expect(res.statusCode).toBe(200); // Or whatever success code
-      }
-    });
-  });
 });

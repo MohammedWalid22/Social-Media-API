@@ -1,4 +1,3 @@
-const { LanguageServiceClient } = require('@google-cloud/language');
 
 // Mock LanguageServiceClient
 jest.mock('@google-cloud/language', () => {

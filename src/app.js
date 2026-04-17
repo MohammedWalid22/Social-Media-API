@@ -5,7 +5,7 @@ let redisManager;
 try {
   redisManager = require('./config/redis');
 } catch (error) {
-  console.warn('Redis manager initialization deferred');
+  // Redis manager initialization deferred
   redisManager = null;
 }
 

@@ -2,7 +2,7 @@ const request = require('supertest');
 const app = require('../src/app');
 const User = require('../src/models/User');
 const Sticker = require('../src/models/Sticker');
-const cloudinary = require('../src/config/cloudinary');
+
 
 jest.mock('../src/config/cloudinary', () => ({
   uploader: {

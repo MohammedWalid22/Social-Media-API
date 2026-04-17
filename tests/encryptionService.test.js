@@ -38,7 +38,7 @@ describe('EncryptionService Unit Tests', () => {
     });
 
     it('should throw when decryption fails with wrong key', () => {
-      const { publicKey: pk2 } = encryptionService.generateKeyPair();
+      encryptionService.generateKeyPair();
       const encrypted = encryptionService.encryptMessage('secret', publicKey);
       // Use a different private key - should fail
       const { privateKey: wrongPk } = encryptionService.generateKeyPair();

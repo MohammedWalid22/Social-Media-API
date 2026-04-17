@@ -1,4 +1,3 @@
-const mongoose = require('mongoose');
 const gamificationService = require('../src/services/gamificationService');
 const User = require('../src/models/User');
 const logger = require('../src/utils/logger');

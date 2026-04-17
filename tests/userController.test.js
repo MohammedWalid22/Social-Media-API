@@ -1,7 +1,7 @@
 const userController = require('../src/controllers/userController');
 const User = require('../src/models/User');
 const Post = require('../src/models/Post');
-const FollowRequest = require('../src/models/FollowRequest');
+
 const cloudinary = require('../src/config/cloudinary');
 const NotificationService = require('../src/services/notificationService');
 const AuditLog = require('../src/models/AuditLog');
