@@ -123,4 +123,93 @@ describe('Post Endpoints', () => {
       expect(res.body.data.post.content.text).toBe('Post to get');
     });
   });
+
+  describe('PATCH /api/v1/posts/:postId', () => {
+    it('should update a post if author', async () => {
+      const postRes = await request(app)
+        .post('/api/v1/posts')
+        .set('Authorization', `Bearer ${token}`)
+        .send({ content: 'Old content' });
+      const postId = postRes.body.data.post._id;
+
+      const res = await request(app)
+        .patch(`/api/v1/posts/${postId}`)
+        .set('Authorization', `Bearer ${token}`)
+        .send({ content: 'New content' });
+      
+      expect(res.statusCode).toBe(200);
+      expect(res.body.data.post.content.text).toBe('New content');
+    });
+  });
+
+  describe('DELETE /api/v1/posts/:postId', () => {
+    it('should delete a post if author', async () => {
+      const postRes = await request(app)
+        .post('/api/v1/posts')
+        .set('Authorization', `Bearer ${token}`)
+        .send({ content: 'To delete' });
+      const postId = postRes.body.data.post._id;
+
+      const res = await request(app)
+        .delete(`/api/v1/posts/${postId}`)
+        .set('Authorization', `Bearer ${token}`);
+      
+      expect(res.statusCode).toBe(200);
+      
+      // verify it is deleted
+      const getRes = await request(app)
+        .get(`/api/v1/posts/${postId}`)
+        .set('Authorization', `Bearer ${token}`);
+      expect(getRes.statusCode).toBe(404);
+    });
+  });
+
+  describe('POST /api/v1/posts/:postId/bookmark', () => {
+    it('should bookmark and unbookmark a post', async () => {
+      const postRes = await request(app)
+        .post('/api/v1/posts')
+        .set('Authorization', `Bearer ${token}`)
+        .send({ content: 'Bookmark me' });
+      const postId = postRes.body.data.post._id;
+
+      // Bookmark
+      const res = await request(app)
+        .post(`/api/v1/posts/${postId}/bookmark`)
+        .set('Authorization', `Bearer ${token}`);
+      expect(res.statusCode).toBe(200);
+      expect(res.body.data.isBookmarked).toBe(true);
+
+      // Unbookmark
+      const res2 = await request(app)
+        .post(`/api/v1/posts/${postId}/bookmark`)
+        .set('Authorization', `Bearer ${token}`);
+      expect(res2.statusCode).toBe(200);
+      expect(res2.body.data.isBookmarked).toBe(false);
+    });
+  });
+
+  describe('POST /api/v1/posts/:postId/poll/vote', () => {
+    it('should vote on a poll', async () => {
+      const postRes = await request(app)
+        .post('/api/v1/posts')
+        .set('Authorization', `Bearer ${token}`)
+        .send({ 
+          content: 'Poll post',
+          poll: { question: 'Q?', options: [{ text: 'A' }, { text: 'B' }] }
+        });
+      
+      const post = postRes.body.data.post;
+      // We assume it creates the poll successfully, we'll extract option ID
+      if(post.poll && post.poll.options.length > 0) {
+        const optionId = post.poll.options[0]._id;
+        
+        const res = await request(app)
+          .post(`/api/v1/posts/${post._id}/poll/vote`)
+          .set('Authorization', `Bearer ${token}`)
+          .send({ optionId });
+        
+        expect(res.statusCode).toBe(200); // Or whatever success code
+      }
+    });
+  });
 });

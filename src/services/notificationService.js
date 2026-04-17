@@ -217,7 +217,7 @@ class NotificationService {
   async groupNotifications(userId) {
     try {
       const grouped = await Notification.aggregate([
-        { $match: { recipient: mongoose.Types.ObjectId(userId), read: false } },
+        { $match: { recipient: new mongoose.Types.ObjectId(userId), read: false } },
         {
           $group: {
             _id: { type: '$type', sender: '$sender' },

@@ -10,6 +10,7 @@
     "test:watch": "jest --watch",
     "test:unit": "jest tests/unit.test.js --forceExit",
     "test:integration": "jest tests/integration.test.js --forceExit",
+    "test:load": "artillery run load-tests/api-benchmark.yml",
     "lint": "eslint src/ tests/",
     "lint:fix": "eslint src/ tests/ --fix",
     "seed": "node scripts/seed.js"
@@ -29,6 +30,8 @@
     "@google-cloud/language": "^6.0.0",
     "@google-cloud/speech": "^6.0.0",
     "@google-cloud/storage": "^7.0.0",
+    "@sentry/node": "^10.49.0",
+    "@sentry/profiling-node": "^10.49.0",
     "argon2": "^0.31.0",
     "bcryptjs": "^2.4.3",
     "cloudinary": "^2.9.0",

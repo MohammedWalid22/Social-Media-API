@@ -11,7 +11,7 @@ class AnalyticsService {
       const stats = await Post.aggregate([
         {
           $match: {
-            author: mongoose.Types.ObjectId(userId),
+            author: new mongoose.Types.ObjectId(userId),
             createdAt: { $gte: since },
           },
         },

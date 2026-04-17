@@ -11,6 +11,7 @@ class EmailService {
   initialize() {
     if (!process.env.EMAIL_HOST || !process.env.EMAIL_USER) {
       logger.warn('Email configuration not found. Email service disabled.');
+      this.isEnabled = false;
       return;
     }
 

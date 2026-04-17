@@ -1,0 +1,48 @@
+config:
+  target: "http://localhost:3000"
+  phases:
+    - duration: 60
+      arrivalRate: 5
+      rampTo: 50
+      name: "Warm up API"
+    - duration: 120
+      arrivalRate: 50
+      name: "Sustained load"
+  payload:
+    # Optional: Load test users from a CSV if we need auth testing
+    # path: "users.csv"
+    # fields:
+    #   - "email"
+    #   - "password"
+  plugins:
+    # Ensure dependencies are monitored (can track custom metrics)
+    metrics-by-endpoint: {}
+
+scenarios:
+  - name: "Health Check Load"
+    weight: 2
+    flow:
+      - get:
+          url: "/health"
+          expect:
+            - statusCode: 200
+
+  - name: "Root Endpoint Load"
+    weight: 1
+    flow:
+      - get:
+          url: "/"
+          expect:
+            - statusCode: 200
+
+  - name: "Public Feed Load (Simulated)"
+    weight: 3
+    flow:
+      - get:
+          url: "/api/v1/posts"
+          # Typically this requires auth, but for read-only we simulated a bad token 
+          # which should reject quickly, testing middleware performance
+          headers:
+            Authorization: "Bearer invalid_token"
+          expect:
+            - statusCode: 401

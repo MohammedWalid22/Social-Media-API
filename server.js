@@ -22,16 +22,19 @@ const startServer = async () => {
     // Initialize Real-time notification socket server
     new NotificationSocketService(server);
 
-    // Handle unhandled promise rejections
     process.on('unhandledRejection', (err) => {
       console.error('❌ UNHANDLED REJECTION! Shutting down...');
       console.error(err.name, err.message);
+      const Sentry = require('@sentry/node');
+      Sentry.captureException(err);
       server.close(() => process.exit(1));
     });
 
     process.on('uncaughtException', (err) => {
       console.error('❌ UNCAUGHT EXCEPTION! Shutting down...');
       console.error(err.name, err.message);
+      const Sentry = require('@sentry/node');
+      Sentry.captureException(err);
       process.exit(1);
     });
 
