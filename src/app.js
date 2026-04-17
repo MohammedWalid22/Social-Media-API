@@ -1,7 +1,13 @@
 const express = require('express');
 const mongoose = require('mongoose');
 const path = require('path');
-const redisManager = require('./config/redis');
+let redisManager;
+try {
+  redisManager = require('./config/redis');
+} catch (error) {
+  console.warn('Redis manager initialization deferred');
+  redisManager = null;
+}
 
 // Import configurations
 const security = require('./middleware/security');
@@ -17,25 +23,25 @@ const { nodeProfilingIntegration } = require('@sentry/profiling-node');
 
 const app = express();
 
-// Initialize Sentry
-Sentry.init({
-  dsn: process.env.SENTRY_DSN,
-  integrations: [
-    new Sentry.Integrations.Http({ tracing: true }),
-    new Sentry.Integrations.Express({ app }),
-    nodeProfilingIntegration(),
-  ],
-  // Performance Monitoring
-  tracesSampleRate: 1.0, 
-  // Set sampling rate for profiling
-  profilesSampleRate: 1.0,
-  environment: process.env.NODE_ENV || 'development'
-});
+// Initialize Sentry only if not in test mode
+if (process.env.NODE_ENV !== 'test') {
+  Sentry.init({
+    dsn: process.env.SENTRY_DSN,
+    integrations: [
+      nodeProfilingIntegration(),
+    ],
+    // Performance Monitoring
+    tracesSampleRate: 1.0, 
+    // Set sampling rate for profiling
+    profilesSampleRate: 1.0,
+    environment: process.env.NODE_ENV || 'development'
+  });
 
-// The request handler must be the first middleware on the app
-app.use(Sentry.Handlers.requestHandler());
-// TracingHandler creates a trace for every incoming request
-app.use(Sentry.Handlers.tracingHandler());
+  // The request handler must be the first middleware on the app
+  app.use(Sentry.Handlers.requestHandler());
+  // TracingHandler creates a trace for every incoming request
+  app.use(Sentry.Handlers.tracingHandler());
+}
 
 // Trust proxy (for nginx/docker)
 app.set('trust proxy', 1);
@@ -62,7 +68,7 @@ app.use('/api/v1', routes);
 // Health check endpoint
 app.get('/health', (req, res) => {
   const dbStatus = mongoose.connection.readyState === 1 ? 'connected' : 'disconnected';
-  const redisStatus = redisManager.isReady() ? 'connected' : 'disconnected';
+  const redisStatus = redisManager?.isReady?.() ? 'connected' : 'disconnected';
   const isHealthy = dbStatus === 'connected' && redisStatus === 'connected';
 
   res.status(isHealthy ? 200 : 503).json({
@@ -89,7 +95,9 @@ app.all('*', (req, res, next) => {
 });
 
 // Sentry error handler must be before any other error middleware and after all controllers
-app.use(Sentry.Handlers.errorHandler());
+if (process.env.NODE_ENV !== 'test') {
+  app.use(Sentry.Handlers.errorHandler());
+}
 
 // Global error handler
 app.use(errorHandler);
