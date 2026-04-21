@@ -90,7 +90,7 @@ describe('UserController Unit Tests', () => {
   describe('uploadAvatar', () => {
     it('should return 400 if no file', async () => {
       await userController.uploadAvatar(mockReq, mockRes, mockNext);
-      expect(mockRes.status).toHaveBeenCalledWith(400);
+      expect(mockNext).toHaveBeenCalledWith(expect.objectContaining({ statusCode: 400 }));
     });
 
     it('should upload to cloudinary and update avatar', async () => {
@@ -118,7 +118,7 @@ describe('UserController Unit Tests', () => {
       User.findOne.mockReturnValue({ select: jest.fn().mockResolvedValue(null) });
 
       await userController.getUserProfile(mockReq, mockRes, mockNext);
-      expect(mockRes.status).toHaveBeenCalledWith(404);
+      expect(mockNext).toHaveBeenCalledWith(expect.objectContaining({ statusCode: 404 }));
     });
 
     it('should return user profile and public posts', async () => {
@@ -159,7 +159,7 @@ describe('UserController Unit Tests', () => {
 
       await userController.getUserProfile(mockReq, mockRes, mockNext);
 
-      expect(mockRes.status).toHaveBeenCalledWith(403);
+      expect(mockNext).toHaveBeenCalledWith(expect.objectContaining({ statusCode: 403 }));
     });
   });
 
@@ -167,14 +167,14 @@ describe('UserController Unit Tests', () => {
     it('should not allow following oneself', async () => {
       mockReq.params.userId = 'current_user_id';
       await userController.followUser(mockReq, mockRes, mockNext);
-      expect(mockRes.status).toHaveBeenCalledWith(400);
+      expect(mockNext).toHaveBeenCalledWith(expect.objectContaining({ statusCode: 400 }));
     });
 
     it('should return 404 if target user not found', async () => {
       mockReq.params.userId = 'target_id';
       User.findById.mockResolvedValue(null);
       await userController.followUser(mockReq, mockRes, mockNext);
-      expect(mockRes.status).toHaveBeenCalledWith(404);
+      expect(mockNext).toHaveBeenCalledWith(expect.objectContaining({ statusCode: 404 }));
     });
 
     it('should unfollow if already following', async () => {
@@ -223,7 +223,7 @@ describe('UserController Unit Tests', () => {
     it('should return 400 if query is too short', async () => {
       mockReq.query.q = 'a';
       await userController.searchUsers(mockReq, mockRes, mockNext);
-      expect(mockRes.status).toHaveBeenCalledWith(400);
+      expect(mockNext).toHaveBeenCalledWith(expect.objectContaining({ statusCode: 400 }));
     });
 
     it('should perform text search and return users', async () => {
@@ -276,7 +276,7 @@ describe('UserController Unit Tests', () => {
 
       await userController.deleteAccount(mockReq, mockRes, mockNext);
       
-      expect(mockRes.status).toHaveBeenCalledWith(401);
+      expect(mockNext).toHaveBeenCalledWith(expect.objectContaining({ statusCode: 401 }));
     });
 
     it('should schedule account deletion and wipe data if password is correct', async () => {

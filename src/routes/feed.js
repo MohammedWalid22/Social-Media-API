@@ -41,12 +41,34 @@ router.get('/newsfeed',
  *     tags: [Feed]
  *     security:
  *       - bearerAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: timeframe
+ *         schema:
+ *           type: string
+ *           enum: [1h, 24h, 7d, 30d]
+ *         description: Time window for trending calculation (default 24h)
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: integer
+ *           minimum: 1
+ *           maximum: 50
+ *         description: Number of results (default 20)
+ *       - in: query
+ *         name: page
+ *         schema:
+ *           type: integer
+ *           minimum: 1
+ *         description: Page number (default 1)
  *     responses:
  *       200:
  *         description: Trending posts
  */
 router.get('/trending', 
   auth.protect,
+  validators.pagination,
+  cache(300),
   (req, res, next) => feedController.getTrending(req, res, next)
 );
 
@@ -58,12 +80,42 @@ router.get('/trending',
  *     tags: [Feed]
  *     security:
  *       - bearerAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: longitude
+ *         required: true
+ *         schema:
+ *           type: number
+ *       - in: query
+ *         name: latitude
+ *         required: true
+ *         schema:
+ *           type: number
+ *       - in: query
+ *         name: radius
+ *         schema:
+ *           type: integer
+ *         description: Search radius in meters (default 5000)
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: integer
+ *           minimum: 1
+ *           maximum: 50
+ *         description: Number of results (default 20)
+ *       - in: query
+ *         name: page
+ *         schema:
+ *           type: integer
+ *           minimum: 1
+ *         description: Page number (default 1)
  *     responses:
  *       200:
  *         description: Nearby posts
  */
 router.get('/nearby',
   auth.protect,
+  validators.pagination,
   (req, res, next) => feedController.getNearbyPosts(req, res, next)
 );
 

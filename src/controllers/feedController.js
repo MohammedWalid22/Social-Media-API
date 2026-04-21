@@ -1,5 +1,6 @@
 const Post = require('../models/Post');
 const User = require('../models/User');
+const { AppError } = require('../middleware/errorHandler');
 
 class FeedController {
   async getNewsFeed(req, res, next) {
@@ -182,7 +183,10 @@ class FeedController {
 
   async getTrending(req, res, next) {
     try {
-      const { timeframe = '24h', category } = req.query;
+      const { timeframe = '24h', category, page = 1, limit = 20 } = req.query;
+      const safeLimit = Math.min(parseInt(limit) || 20, 50);
+      const safePage = Math.max(parseInt(page) || 1, 1);
+      const skip = (safePage - 1) * safeLimit;
       
       const timeMap = {
         '1h': 1,
@@ -220,7 +224,8 @@ class FeedController {
           },
         },
         { $sort: { trendingScore: -1 } },
-        { $limit: 20 },
+        { $skip: skip },
+        { $limit: safeLimit },
         {
           $lookup: {
             from: 'users',
@@ -240,6 +245,9 @@ class FeedController {
       
       res.status(200).json({
         status: 'success',
+        results: trending.length,
+        page: safePage,
+        limit: safeLimit,
         data: { trending },
       });
       
@@ -250,10 +258,13 @@ class FeedController {
 
   async getNearbyPosts(req, res, next) {
     try {
-      const { longitude, latitude, radius = 5000 } = req.query; 
+      const { longitude, latitude, radius = 5000, page = 1, limit = 20 } = req.query;
+      const safeLimit = Math.min(parseInt(limit) || 20, 50);
+      const safePage = Math.max(parseInt(page) || 1, 1);
+      const skip = (safePage - 1) * safeLimit;
 
       if (!longitude || !latitude) {
-        return res.status(400).json({ status: 'fail', message: 'Please provide longitude and latitude' });
+        return next(new AppError('Please provide longitude and latitude', 400));
       }
       
       const posts = await Post.aggregate([
@@ -273,7 +284,8 @@ class FeedController {
           },
         },
         { $sort: { createdAt: -1 } },
-        { $limit: 20 },
+        { $skip: skip },
+        { $limit: safeLimit },
         {
           $lookup: {
             from: 'users',
@@ -287,6 +299,9 @@ class FeedController {
 
       res.status(200).json({
         status: 'success',
+        results: posts.length,
+        page: safePage,
+        limit: safeLimit,
         data: { posts },
       });
       

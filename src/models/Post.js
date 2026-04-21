@@ -153,12 +153,22 @@ moderatedAt: Date,
   moderationScore: { type: Number, min: 0, max: 1 },
   aiTags: [String],
   sentimentScore: { type: Number, min: -1, max: 1 },
-  
+
+  // ⏳ Time Capsule
+  isCapsule: { type: Boolean, default: false },
+  capsuleRevealAt: Date,
+  capsuleHint: { type: String, maxlength: 150 },
+  capsuleStatus: {
+    type: String,
+    enum: ['sealed', 'revealed'],
+  },
+  _capsuleOriginalVisibility: String, // internal field to restore on unseal
+
   // Metadata
   isEdited: { type: Boolean, default: false },
   editedAt: Date,
   language: String,
-  
+
 }, {
   timestamps: true,
 });
@@ -170,6 +180,8 @@ postSchema.index({ hashtags: 1, createdAt: -1 });
 postSchema.index({ location: '2dsphere' }, { sparse: true });
 postSchema.index({ 'poll.endDate': 1 });
 postSchema.index({ expiresAt: 1 }, { expireAfterSeconds: 0 }); // TTL for stories
+// Time Capsule: fast lookup of due capsules
+postSchema.index({ isCapsule: 1, capsuleStatus: 1, capsuleRevealAt: 1 }, { sparse: true });
 
 // Compound index for feed generation
 postSchema.index({ author: 1, createdAt: -1, visibility: 1 });

@@ -13,6 +13,9 @@ const storyRoutes = require('./stories');
 const stickerRoutes = require('./stickers');
 const reportRoutes = require('./reports');
 const groupRoutes = require('./groups');
+const webhookRoutes = require('./webhooks');
+const insightRoutes = require('./insights');
+const privacyRoutes = require('./privacy');
 
 // Mount routes
 router.use('/auth', authRoutes);
@@ -29,6 +32,9 @@ router.use('/stories', storyRoutes);
 router.use('/stickers', stickerRoutes);
 router.use('/reports', reportRoutes);
 router.use('/groups', groupRoutes);
+router.use('/webhooks', webhookRoutes);
+router.use('/insights', insightRoutes);
+router.use('/privacy', privacyRoutes);
 
 /**
  * @swagger

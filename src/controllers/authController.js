@@ -5,6 +5,7 @@ const qrcode = require('qrcode');
 const User = require('../models/User');
 const EmailService = require('../services/emailService');
 const AuditLog = require('../models/AuditLog');
+const { AppError } = require('../middleware/errorHandler');
 
 class AuthController {
   constructor() {
@@ -67,10 +68,7 @@ class AuthController {
       });
 
       if (existingUser) {
-        return res.status(400).json({
-          status: 'fail',
-          message: 'Email or username already exists',
-        });
+        return next(new AppError('Email or username already exists', 409));
       }
 
       const EncryptionService = require('../services/encryptionService');
@@ -108,10 +106,7 @@ class AuthController {
       const { email, password, twoFactorCode } = req.body;
 
       if (!email || !password) {
-        return res.status(400).json({
-          status: 'fail',
-          message: 'Please provide email and password',
-        });
+        return next(new AppError('Please provide email and password', 400));
       }
 
       const user = await User.findOne({ email }).select('+password +twoFactorSecret +loginAttempts +lockUntil');
@@ -125,21 +120,16 @@ class AuthController {
           await user.save({ validateBeforeSave: false });
         }
 
-        return res.status(401).json({
-          status: 'fail',
-          message: 'Incorrect email or password',
-        });
+        return next(new AppError('Incorrect email or password', 401));
       }
 
       if (user.lockUntil && user.lockUntil > Date.now()) {
-        return res.status(423).json({
-          status: 'fail',
-          message: 'Account is locked. Please try again later.',
-        });
+        return next(new AppError('Account is locked. Please try again later.', 423));
       }
 
       if (user.twoFactorEnabled) {
         if (!twoFactorCode) {
+          // Special case: needs extra field in response — handled inline only here
           return res.status(401).json({
             status: 'fail',
             message: '2FA code required',
@@ -155,10 +145,7 @@ class AuthController {
         });
 
         if (!verified) {
-          return res.status(401).json({
-            status: 'fail',
-            message: 'Invalid 2FA code',
-          });
+          return next(new AppError('Invalid 2FA code', 401));
         }
       }
 
@@ -219,10 +206,7 @@ class AuthController {
       });
 
       if (!verified) {
-        return res.status(400).json({
-          status: 'fail',
-          message: 'Invalid verification code',
-        });
+        return next(new AppError('Invalid verification code', 400));
       }
 
       user.twoFactorEnabled = true;
@@ -243,10 +227,7 @@ class AuthController {
       const user = await User.findOne({ email });
 
       if (!user) {
-        return res.status(404).json({
-          status: 'fail',
-          message: 'No user found with that email',
-        });
+        return next(new AppError('No user found with that email', 404));
       }
 
       const resetToken = user.createPasswordResetToken();
@@ -266,10 +247,7 @@ class AuthController {
         user.passwordResetExpires = undefined;
         await user.save({ validateBeforeSave: false });
 
-        return res.status(500).json({
-          status: 'error',
-          message: 'Error sending email. Try again later.',
-        });
+        return next(new AppError('Error sending email. Try again later.', 500));
       }
     } catch (error) {
       next(error);
@@ -289,10 +267,7 @@ class AuthController {
       });
 
       if (!user) {
-        return res.status(400).json({
-          status: 'fail',
-          message: 'Token is invalid or expired',
-        });
+        return next(new AppError('Token is invalid or expired', 400));
       }
 
       user.password = req.body.password;
@@ -375,10 +350,7 @@ class AuthController {
       const user = await User.findById(req.user._id).select('+password');
 
       if (!(await user.comparePassword(req.body.currentPassword))) {
-        return res.status(401).json({
-          status: 'fail',
-          message: 'Current password is incorrect',
-        });
+        return next(new AppError('Current password is incorrect', 401));
       }
 
       user.password = req.body.newPassword;
@@ -402,10 +374,7 @@ class AuthController {
       const user = await User.findById(req.user._id).select('+password');
 
       if (!(await user.comparePassword(password))) {
-        return res.status(401).json({
-          status: 'fail',
-          message: 'Incorrect password',
-        });
+        return next(new AppError('Incorrect password', 401));
       }
 
       user.twoFactorEnabled = false;
@@ -449,10 +418,7 @@ class AuthController {
       });
 
       if (!user) {
-        return res.status(400).json({
-          status: 'fail',
-          message: 'Token is invalid or has expired',
-        });
+        return next(new AppError('Token is invalid or has expired', 400));
       }
 
       user.isEmailVerified = true;

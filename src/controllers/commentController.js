@@ -7,6 +7,8 @@ const AudioProcessingService = require('../services/audioProcessingService');
 const AudioModerationService = require('../services/audioModerationService');
 const NotificationService = require('../services/notificationService');
 const GamificationService = require('../services/gamificationService');
+const EchoChamberService = require('../services/echoChamberService');
+const WebhookService = require('../services/webhookService');
 const cloudinary = require('../config/cloudinary');
 const logger = require('../utils/logger');
 
@@ -61,6 +63,15 @@ class CommentController {
 
       // Gamification: 5 points for commenting
       GamificationService.addPoints(req.user._id, 5).catch(err => logger.error('Gamification error:', err));
+
+      // 🫧 Echo Chamber tracking + 🔗 Webhook (fire-and-forget)
+      EchoChamberService.trackInteraction(req.user._id, postId, 'comment').catch(() => {});
+      WebhookService.trigger('comment.added', {
+        postId,
+        commentId: comment._id,
+        authorId: req.user._id,
+        isReply: !!parentCommentId,
+      }).catch(() => {});
 
       res.status(201).json({
         status: 'success',

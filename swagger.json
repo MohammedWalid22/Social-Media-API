@@ -1,0 +1,3786 @@
+{
+  "openapi": "3.0.0",
+  "info": {
+    "title": "Social Media API",
+    "version": "1.0.0",
+    "description": "Professional REST API documentation for the Social Media Backend. Supports authentication, posts, comments, stories, notifications, real-time messaging, and more.",
+    "contact": {
+      "name": "API Support",
+      "email": "support@socialmedia.dev"
+    }
+  },
+  "servers": [
+    {
+      "url": "/api/v1",
+      "description": "Current Environment API"
+    }
+  ],
+  "components": {
+    "securitySchemes": {
+      "bearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT",
+        "description": "أدخل رمز JWT: Bearer <token>"
+      }
+    },
+    "schemas": {
+      "ErrorResponse": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "string",
+            "enum": [
+              "fail",
+              "error"
+            ],
+            "example": "fail"
+          },
+          "message": {
+            "type": "string",
+            "example": "Resource not found"
+          }
+        }
+      },
+      "SuccessResponse": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "string",
+            "enum": [
+              "success"
+            ],
+            "example": "success"
+          },
+          "message": {
+            "type": "string",
+            "example": "Operation completed successfully"
+          }
+        }
+      },
+      "PaginationMeta": {
+        "type": "object",
+        "properties": {
+          "results": {
+            "type": "integer",
+            "description": "Number of results in this page",
+            "example": 20
+          },
+          "page": {
+            "type": "integer",
+            "description": "Current page number",
+            "example": 1
+          },
+          "limit": {
+            "type": "integer",
+            "description": "Max results per page",
+            "example": 20
+          },
+          "nextCursor": {
+            "type": "string",
+            "nullable": true,
+            "description": "Cursor for the next page (cursor-based pagination)",
+            "example": "2024-01-15T10:30:00.000Z"
+          }
+        }
+      },
+      "UserPublic": {
+        "type": "object",
+        "properties": {
+          "_id": {
+            "type": "string",
+            "example": "65a1b2c3d4e5f6a7b8c9d0e1"
+          },
+          "username": {
+            "type": "string",
+            "example": "john_doe"
+          },
+          "displayName": {
+            "type": "string",
+            "example": "John Doe"
+          },
+          "avatar": {
+            "type": "object",
+            "properties": {
+              "url": {
+                "type": "string",
+                "format": "uri",
+                "example": "https://res.cloudinary.com/..."
+              }
+            }
+          },
+          "isVerified": {
+            "type": "boolean",
+            "example": false
+          },
+          "bio": {
+            "type": "string",
+            "example": "Software engineer & coffee enthusiast"
+          },
+          "followersCount": {
+            "type": "integer",
+            "example": 1240
+          },
+          "followingCount": {
+            "type": "integer",
+            "example": 380
+          }
+        }
+      },
+      "UserPrivate": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/UserPublic"
+          },
+          {
+            "type": "object",
+            "properties": {
+              "email": {
+                "type": "string",
+                "format": "email",
+                "example": "john@example.com"
+              },
+              "twoFactorEnabled": {
+                "type": "boolean",
+                "example": false
+              },
+              "isEmailVerified": {
+                "type": "boolean",
+                "example": true
+              },
+              "createdAt": {
+                "type": "string",
+                "format": "date-time"
+              }
+            }
+          }
+        ]
+      },
+      "AuthResponse": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "string",
+            "example": "success"
+          },
+          "token": {
+            "type": "string",
+            "example": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+          },
+          "deviceId": {
+            "type": "string",
+            "example": "a1b2c3d4e5f6a7b8"
+          },
+          "data": {
+            "type": "object",
+            "properties": {
+              "user": {
+                "$ref": "#/components/schemas/UserPrivate"
+              }
+            }
+          }
+        }
+      },
+      "PostMedia": {
+        "type": "object",
+        "properties": {
+          "type": {
+            "type": "string",
+            "enum": [
+              "image",
+              "video"
+            ],
+            "example": "image"
+          },
+          "url": {
+            "type": "string",
+            "format": "uri"
+          },
+          "thumbnail": {
+            "type": "string",
+            "format": "uri"
+          },
+          "metadata": {
+            "type": "object",
+            "properties": {
+              "width": {
+                "type": "integer"
+              },
+              "height": {
+                "type": "integer"
+              },
+              "size": {
+                "type": "integer"
+              },
+              "format": {
+                "type": "string"
+              }
+            }
+          }
+        }
+      },
+      "Post": {
+        "type": "object",
+        "properties": {
+          "_id": {
+            "type": "string",
+            "example": "65a1b2c3d4e5f6a7b8c9d0e1"
+          },
+          "author": {
+            "$ref": "#/components/schemas/UserPublic"
+          },
+          "content": {
+            "type": "object",
+            "properties": {
+              "text": {
+                "type": "string",
+                "example": "Hello world! #social @friend"
+              }
+            }
+          },
+          "media": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PostMedia"
+            }
+          },
+          "visibility": {
+            "type": "string",
+            "enum": [
+              "public",
+              "friends",
+              "followers",
+              "private",
+              "custom"
+            ],
+            "example": "public"
+          },
+          "likesCount": {
+            "type": "integer",
+            "example": 42
+          },
+          "commentsCount": {
+            "type": "integer",
+            "example": 7
+          },
+          "sharesCount": {
+            "type": "integer",
+            "example": 3
+          },
+          "isLiked": {
+            "type": "boolean",
+            "example": false
+          },
+          "hashtags": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "example": [
+              "social",
+              "tech"
+            ]
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "isEdited": {
+            "type": "boolean",
+            "example": false
+          }
+        }
+      },
+      "Comment": {
+        "type": "object",
+        "properties": {
+          "_id": {
+            "type": "string",
+            "example": "65a1b2c3d4e5f6a7b8c9d0e2"
+          },
+          "author": {
+            "$ref": "#/components/schemas/UserPublic"
+          },
+          "content": {
+            "type": "string",
+            "example": "Great post!"
+          },
+          "likesCount": {
+            "type": "integer",
+            "example": 5
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "ValidationError": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "string",
+            "example": "fail"
+          },
+          "message": {
+            "type": "string",
+            "example": "Validation failed"
+          },
+          "errors": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "field": {
+                  "type": "string",
+                  "example": "email"
+                },
+                "message": {
+                  "type": "string",
+                  "example": "Please provide a valid email address"
+                },
+                "value": {
+                  "type": "string",
+                  "example": "not-an-email"
+                }
+              }
+            }
+          }
+        }
+      },
+      "Group": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "visibility": {
+            "type": "string",
+            "enum": [
+              "public",
+              "private"
+            ]
+          },
+          "membersCount": {
+            "type": "integer"
+          },
+          "creator": {
+            "$ref": "#/components/schemas/UserPublic"
+          }
+        }
+      },
+      "Report": {
+        "type": "object",
+        "required": [
+          "targetType",
+          "targetId",
+          "reason"
+        ],
+        "properties": {
+          "targetType": {
+            "type": "string",
+            "enum": [
+              "user",
+              "post",
+              "comment"
+            ]
+          },
+          "targetId": {
+            "type": "string"
+          },
+          "reason": {
+            "type": "string",
+            "enum": [
+              "spam",
+              "hate_speech",
+              "harassment",
+              "violence",
+              "misinformation",
+              "nudity",
+              "other"
+            ]
+          },
+          "details": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "pending",
+              "reviewed",
+              "resolved",
+              "dismissed"
+            ]
+          }
+        }
+      }
+    },
+    "responses": {
+      "Unauthorized": {
+        "description": "Unauthorized — missing or invalid JWT token",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/ErrorResponse"
+            },
+            "example": {
+              "status": "fail",
+              "message": "Invalid token. Please log in again."
+            }
+          }
+        }
+      },
+      "NotFound": {
+        "description": "Resource not found",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/ErrorResponse"
+            },
+            "example": {
+              "status": "fail",
+              "message": "Post not found"
+            }
+          }
+        }
+      },
+      "Forbidden": {
+        "description": "Forbidden — insufficient permissions",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/ErrorResponse"
+            }
+          }
+        }
+      },
+      "BadRequest": {
+        "description": "Bad request — validation failed",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/ValidationError"
+            }
+          }
+        }
+      },
+      "ServerError": {
+        "description": "Internal server error",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/ErrorResponse"
+            },
+            "example": {
+              "status": "error",
+              "message": "Something went wrong!"
+            }
+          }
+        }
+      }
+    },
+    "parameters": {
+      "PageParam": {
+        "in": "query",
+        "name": "page",
+        "schema": {
+          "type": "integer",
+          "minimum": 1,
+          "default": 1
+        },
+        "description": "Page number (1-indexed)"
+      },
+      "LimitParam": {
+        "in": "query",
+        "name": "limit",
+        "schema": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 100,
+          "default": 20
+        },
+        "description": "Number of results per page (max 100)"
+      }
+    }
+  },
+  "security": [
+    {
+      "bearerAuth": []
+    }
+  ],
+  "tags": [
+    {
+      "name": "Auth",
+      "description": "Authentication & session management"
+    },
+    {
+      "name": "Users",
+      "description": "User profiles, follow system, and settings"
+    },
+    {
+      "name": "Posts",
+      "description": "Post creation, reactions, and sharing"
+    },
+    {
+      "name": "Comments",
+      "description": "Text and audio comments"
+    },
+    {
+      "name": "Feed",
+      "description": "Personalized feed, trending, and nearby posts"
+    },
+    {
+      "name": "Messages",
+      "description": "Direct messaging"
+    },
+    {
+      "name": "Notifications",
+      "description": "In-app notifications"
+    },
+    {
+      "name": "Stories",
+      "description": "Ephemeral story posts"
+    },
+    {
+      "name": "Stickers",
+      "description": "Sticker comments system"
+    },
+    {
+      "name": "Admin",
+      "description": "Admin moderation tools"
+    },
+    {
+      "name": "Authentication",
+      "description": "User login, registration, and security settings"
+    },
+    {
+      "name": "Groups",
+      "description": "Community groups management"
+    },
+    {
+      "name": "Core",
+      "description": "Core system operations"
+    },
+    {
+      "name": "Insights",
+      "description": "Echo Chamber detector, viral leaderboard, and content analytics"
+    },
+    {
+      "name": "Messaging",
+      "description": "Direct messaging formatting and retrieval"
+    },
+    {
+      "name": "Privacy",
+      "description": "GDPR-compliant privacy audit logs — see who viewed your profile and posts"
+    },
+    {
+      "name": "Reports",
+      "description": "Content and user reporting system"
+    },
+    {
+      "name": "Webhooks",
+      "description": "Register external URLs to receive real-time event notifications"
+    }
+  ],
+  "paths": {
+    "/admin/stats": {
+      "get": {
+        "summary": "Get dashboard statistics",
+        "description": "Retrieve general statistics about users, posts, and system status (Requires Admin/Moderator role).",
+        "tags": [
+          "Admin"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "A successful response containing the stats."
+          }
+        }
+      }
+    },
+    "/admin/users": {
+      "get": {
+        "summary": "Get all users with filters",
+        "tags": [
+          "Admin"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "List of users"
+          }
+        }
+      }
+    },
+    "/admin/flagged": {
+      "get": {
+        "summary": "Review flagged content",
+        "tags": [
+          "Admin"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "List of flagged items"
+          }
+        }
+      }
+    },
+    "/admin/moderate": {
+      "post": {
+        "summary": "Moderate specific content",
+        "tags": [
+          "Admin"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "contentId": {
+                    "type": "string"
+                  },
+                  "action": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Moderation executed"
+          }
+        }
+      }
+    },
+    "/admin/users/{userId}/suspend": {
+      "post": {
+        "summary": "Suspend or ban a user",
+        "tags": [
+          "Admin"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "userId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "User suspended successfully"
+          }
+        }
+      }
+    },
+    "/admin/logs": {
+      "get": {
+        "summary": "Retrieve system audit logs",
+        "tags": [
+          "Admin"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "List of audit logs"
+          }
+        }
+      }
+    },
+    "/auth/signup": {
+      "post": {
+        "summary": "Register a new user",
+        "tags": [
+          "Authentication"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "email",
+                  "password",
+                  "username"
+                ],
+                "properties": {
+                  "email": {
+                    "type": "string"
+                  },
+                  "password": {
+                    "type": "string"
+                  },
+                  "username": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "User registered successfully"
+          },
+          "400": {
+            "description": "Validation error"
+          }
+        }
+      }
+    },
+    "/auth/login": {
+      "post": {
+        "summary": "Authenticate user & get token",
+        "tags": [
+          "Authentication"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "email",
+                  "password"
+                ],
+                "properties": {
+                  "email": {
+                    "type": "string"
+                  },
+                  "password": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Login successful"
+          },
+          "401": {
+            "description": "Invalid credentials"
+          }
+        }
+      }
+    },
+    "/auth/forgot-password": {
+      "post": {
+        "summary": "Request password reset email",
+        "tags": [
+          "Authentication"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "email": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Reset email sent"
+          }
+        }
+      }
+    },
+    "/auth/reset-password/{token}": {
+      "patch": {
+        "summary": "Reset password using token",
+        "tags": [
+          "Authentication"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "token",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "password": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Password reset successful"
+          }
+        }
+      }
+    },
+    "/auth/logout": {
+      "post": {
+        "summary": "Logout user",
+        "tags": [
+          "Authentication"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successfully logged out"
+          }
+        }
+      }
+    },
+    "/auth/sessions": {
+      "get": {
+        "summary": "Get all active sessions",
+        "tags": [
+          "Authentication"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "List of active sessions"
+          }
+        }
+      }
+    },
+    "/auth/logout-all": {
+      "post": {
+        "summary": "Logout from all devices",
+        "tags": [
+          "Authentication"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successfully logged out from all devices"
+          }
+        }
+      }
+    },
+    "/auth/update-password": {
+      "patch": {
+        "summary": "Update current user password",
+        "tags": [
+          "Authentication"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "passwordCurrent": {
+                    "type": "string"
+                  },
+                  "password": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Password updated"
+          }
+        }
+      }
+    },
+    "/auth/2fa/setup": {
+      "post": {
+        "summary": "Setup Two-Factor Authentication",
+        "tags": [
+          "Authentication"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "2FA secret and QR code generated"
+          }
+        }
+      }
+    },
+    "/auth/2fa/verify": {
+      "post": {
+        "summary": "Verify and enable Two-Factor Authentication",
+        "tags": [
+          "Authentication"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "token": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "2FA enabled"
+          }
+        }
+      }
+    },
+    "/auth/2fa/disable": {
+      "post": {
+        "summary": "Disable Two-Factor Authentication",
+        "tags": [
+          "Authentication"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "password": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "2FA disabled"
+          }
+        }
+      }
+    },
+    "/auth/refresh-token": {
+      "post": {
+        "summary": "Refresh access token",
+        "tags": [
+          "Authentication"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "New access token generated"
+          }
+        }
+      }
+    },
+    "/auth/verify-email/{token}": {
+      "get": {
+        "summary": "Verify user email",
+        "tags": [
+          "Authentication"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "token",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Email verified successfully"
+          }
+        }
+      }
+    },
+    "/posts/{postId}/comments": {
+      "post": {
+        "summary": "Add a text comment to a post",
+        "tags": [
+          "Comments"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "postId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "content": {
+                    "type": "string"
+                  },
+                  "parentCommentId": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Comment added"
+          }
+        }
+      },
+      "get": {
+        "summary": "Get comments for a post",
+        "tags": [
+          "Comments"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "postId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "List of comments"
+          }
+        }
+      }
+    },
+    "/posts/{postId}/comments/audio": {
+      "post": {
+        "summary": "Add an audio comment to a post",
+        "tags": [
+          "Comments"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "postId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "audio": {
+                    "type": "string",
+                    "format": "binary"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Audio comment added"
+          }
+        }
+      }
+    },
+    "/comments/audio/{audioCommentId}/play": {
+      "post": {
+        "summary": "Record audio play event",
+        "tags": [
+          "Comments"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "audioCommentId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Play event recorded"
+          }
+        }
+      }
+    },
+    "/comments/audio/{audioCommentId}/transcription": {
+      "get": {
+        "summary": "Get generated transcription of audio comment",
+        "tags": [
+          "Comments"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "audioCommentId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Transcription retrieved"
+          }
+        }
+      }
+    },
+    "/comments/audio/{audioCommentId}/speed": {
+      "patch": {
+        "summary": "Adjust playback speed settings for audio",
+        "tags": [
+          "Comments"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "audioCommentId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "speed": {
+                    "type": "number"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Speed updated"
+          }
+        }
+      }
+    },
+    "/comments/{commentId}/react": {
+      "post": {
+        "summary": "Toggle reaction on a comment",
+        "tags": [
+          "Comments"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "commentId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "reaction": {
+                    "type": "string",
+                    "enum": [
+                      "like",
+                      "love",
+                      "laugh",
+                      "angry",
+                      "sad"
+                    ]
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Reaction toggled"
+          }
+        }
+      }
+    },
+    "/comments/{commentId}": {
+      "delete": {
+        "summary": "Delete a comment safely",
+        "tags": [
+          "Comments"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "commentId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Comment deleted"
+          }
+        }
+      }
+    },
+    "/feed/newsfeed": {
+      "get": {
+        "summary": "Get personalized news feed",
+        "tags": [
+          "Feed"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Array of feed posts"
+          }
+        }
+      }
+    },
+    "/feed/trending": {
+      "get": {
+        "summary": "Get currently trending posts",
+        "tags": [
+          "Feed"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "query",
+            "name": "timeframe",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "1h",
+                "24h",
+                "7d",
+                "30d"
+              ]
+            },
+            "description": "Time window for trending calculation (default 24h)"
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 50
+            },
+            "description": "Number of results (default 20)"
+          },
+          {
+            "in": "query",
+            "name": "page",
+            "schema": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "description": "Page number (default 1)"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Trending posts"
+          }
+        }
+      }
+    },
+    "/feed/nearby": {
+      "get": {
+        "summary": "Get posts submitted from nearby location",
+        "tags": [
+          "Feed"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "query",
+            "name": "longitude",
+            "required": true,
+            "schema": {
+              "type": "number"
+            }
+          },
+          {
+            "in": "query",
+            "name": "latitude",
+            "required": true,
+            "schema": {
+              "type": "number"
+            }
+          },
+          {
+            "in": "query",
+            "name": "radius",
+            "schema": {
+              "type": "integer"
+            },
+            "description": "Search radius in meters (default 5000)"
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 50
+            },
+            "description": "Number of results (default 20)"
+          },
+          {
+            "in": "query",
+            "name": "page",
+            "schema": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "description": "Page number (default 1)"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Nearby posts"
+          }
+        }
+      }
+    },
+    "/feed/suggested-users": {
+      "get": {
+        "summary": "Get user suggestions to follow",
+        "tags": [
+          "Feed"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "List of suggested users"
+          }
+        }
+      }
+    },
+    "/feed/suggested-posts": {
+      "get": {
+        "summary": "Get post suggestions based on interactions",
+        "tags": [
+          "Feed"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "List of suggested posts"
+          }
+        }
+      }
+    },
+    "/groups": {
+      "post": {
+        "summary": "Create a new group",
+        "tags": [
+          "Groups"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "name"
+                ],
+                "properties": {
+                  "name": {
+                    "type": "string"
+                  },
+                  "description": {
+                    "type": "string"
+                  },
+                  "visibility": {
+                    "type": "string",
+                    "enum": [
+                      "public",
+                      "private"
+                    ],
+                    "default": "public"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Group created"
+          }
+        }
+      },
+      "get": {
+        "summary": "List all public groups",
+        "tags": [
+          "Groups"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "List of groups"
+          }
+        }
+      }
+    },
+    "/groups/{id}": {
+      "get": {
+        "summary": "Get group by ID",
+        "tags": [
+          "Groups"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Group details"
+          },
+          "403": {
+            "description": "Private group - access denied"
+          },
+          "404": {
+            "description": "Group not found"
+          }
+        }
+      }
+    },
+    "/groups/{id}/join": {
+      "post": {
+        "summary": "Join a public group",
+        "tags": [
+          "Groups"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Joined group"
+          },
+          "400": {
+            "description": "Already a member"
+          },
+          "403": {
+            "description": "Cannot join private group directly"
+          }
+        }
+      }
+    },
+    "/groups/{id}/leave": {
+      "post": {
+        "summary": "Leave a group",
+        "tags": [
+          "Groups"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Left group successfully"
+          }
+        }
+      }
+    },
+    "/status": {
+      "get": {
+        "summary": "Get overall API status and environment info",
+        "tags": [
+          "Core"
+        ],
+        "responses": {
+          "200": {
+            "description": "System operational and responsive"
+          }
+        }
+      }
+    },
+    "/insights/echo-chamber": {
+      "get": {
+        "summary": "Analyze your content diversity (Echo Chamber Detection)",
+        "description": "Uses Shannon Entropy on your last 30 days of interactions to score how diverse your content consumption is (0 = pure echo chamber, 100 = perfectly diverse).",
+        "tags": [
+          "Insights"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Diversity analysis result",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "string"
+                    },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "diversityScore": {
+                          "type": "integer",
+                          "description": "0-100 score (higher = more diverse)",
+                          "example": 42
+                        },
+                        "warningLevel": {
+                          "type": "string",
+                          "enum": [
+                            "healthy",
+                            "moderate",
+                            "high",
+                            "insufficient_data"
+                          ]
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "topTopics": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "tag": {
+                                "type": "string"
+                              },
+                              "count": {
+                                "type": "integer"
+                              },
+                              "percentage": {
+                                "type": "integer"
+                              }
+                            }
+                          }
+                        },
+                        "suggestions": {
+                          "type": "array",
+                          "items": {
+                            "type": "string"
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/insights/echo-chamber/trend": {
+      "get": {
+        "summary": "Get diversity trend over time",
+        "tags": [
+          "Insights"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "query",
+            "name": "days",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 30,
+              "default": 14
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Daily diversity ratios over the period"
+          }
+        }
+      }
+    },
+    "/insights/viral-leaderboard": {
+      "get": {
+        "summary": "Get the most viral posts on the platform",
+        "tags": [
+          "Insights"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "query",
+            "name": "timeframe",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "1h",
+                "24h",
+                "7d",
+                "30d"
+              ],
+              "default": "24h"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 50,
+              "default": 10
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Leaderboard of most viral posts"
+          }
+        }
+      }
+    },
+    "/messages/conversations": {
+      "get": {
+        "summary": "Get user's active conversations",
+        "tags": [
+          "Messaging"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "List of conversation threads"
+          }
+        }
+      }
+    },
+    "/messages/{userId}": {
+      "get": {
+        "summary": "Get conversation history with specific user",
+        "tags": [
+          "Messaging"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "userId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Messages list"
+          }
+        }
+      }
+    },
+    "/messages": {
+      "post": {
+        "summary": "Send a direct message",
+        "tags": [
+          "Messaging"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "recipientId": {
+                    "type": "string"
+                  },
+                  "text": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Message sent successfully"
+          }
+        }
+      }
+    },
+    "/messages/{messageId}/read": {
+      "patch": {
+        "summary": "Mark a message as read",
+        "tags": [
+          "Messaging"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "messageId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Marked as read"
+          }
+        }
+      }
+    },
+    "/messages/{messageId}": {
+      "delete": {
+        "summary": "Delete a specific message",
+        "tags": [
+          "Messaging"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "messageId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Deleted successfully"
+          }
+        }
+      }
+    },
+    "/messages/typing": {
+      "post": {
+        "summary": "Dispatch typing indicator event",
+        "tags": [
+          "Messaging"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Typing status updated"
+          }
+        }
+      }
+    },
+    "/notifications": {
+      "get": {
+        "summary": "Retrieve your notifications overview",
+        "tags": [
+          "Notifications"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Array of personal notifications"
+          }
+        }
+      }
+    },
+    "/notifications/{id}/read": {
+      "patch": {
+        "summary": "Mark single notification as read",
+        "tags": [
+          "Notifications"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successfully marked the alert as read"
+          }
+        }
+      }
+    },
+    "/notifications/read-all": {
+      "patch": {
+        "summary": "Mark all unread notifications as read",
+        "tags": [
+          "Notifications"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Acknowledged all alerts"
+          }
+        }
+      }
+    },
+    "/notifications/{id}": {
+      "delete": {
+        "summary": "Delete a notification entry",
+        "tags": [
+          "Notifications"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Removed"
+          }
+        }
+      }
+    },
+    "/notifications/preferences": {
+      "patch": {
+        "summary": "Update notification categories and delivery preferences",
+        "tags": [
+          "Notifications"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Preferences updated"
+          }
+        }
+      }
+    },
+    "/posts": {
+      "post": {
+        "summary": "Create a new post",
+        "tags": [
+          "Posts"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "content": {
+                    "type": "string",
+                    "maxLength": 5000,
+                    "description": "Post text content"
+                  },
+                  "media": {
+                    "type": "array",
+                    "items": {
+                      "type": "string",
+                      "format": "binary"
+                    },
+                    "description": "Up to 10 media files (images or videos)"
+                  },
+                  "visibility": {
+                    "type": "string",
+                    "enum": [
+                      "public",
+                      "friends",
+                      "followers",
+                      "private",
+                      "custom"
+                    ],
+                    "default": "public"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Post created successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "string",
+                      "example": "success"
+                    },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "post": {
+                          "$ref": "#/components/schemas/Post"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "500": {
+            "$ref": "#/components/responses/ServerError"
+          }
+        }
+      }
+    },
+    "/posts/{postId}": {
+      "get": {
+        "summary": "Get a specific post by ID",
+        "tags": [
+          "Posts"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "postId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "MongoDB ObjectId of the post"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Post retrieved",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "string",
+                      "example": "success"
+                    },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "post": {
+                          "$ref": "#/components/schemas/Post"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          }
+        }
+      },
+      "patch": {
+        "summary": "Update a post (author only)",
+        "tags": [
+          "Posts"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "postId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "content": {
+                    "type": "string",
+                    "maxLength": 5000
+                  },
+                  "visibility": {
+                    "type": "string",
+                    "enum": [
+                      "public",
+                      "friends",
+                      "followers",
+                      "private",
+                      "custom"
+                    ]
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Post updated",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "string"
+                    },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "post": {
+                          "$ref": "#/components/schemas/Post"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          }
+        }
+      },
+      "delete": {
+        "summary": "Delete a post (author or admin)",
+        "tags": [
+          "Posts"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "postId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Post deleted successfully"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          }
+        }
+      }
+    },
+    "/posts/{postId}/like": {
+      "post": {
+        "summary": "Like or unlike a post",
+        "tags": [
+          "Posts"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "postId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Updated like status"
+          }
+        }
+      }
+    },
+    "/posts/{postId}/share": {
+      "post": {
+        "summary": "Share a post",
+        "tags": [
+          "Posts"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "postId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Post shared"
+          }
+        }
+      }
+    },
+    "/posts/{postId}/viral-stats": {
+      "get": {
+        "summary": "Get viral coefficient (K-factor) and reach stats for a post",
+        "tags": [
+          "Posts"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "postId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Viral stats including K-factor, total reach, share depth"
+          }
+        }
+      }
+    },
+    "/posts/{postId}/share-tree": {
+      "get": {
+        "summary": "Get the share propagation tree for a post",
+        "tags": [
+          "Posts"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "postId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Share tree with reshares and their engagement"
+          }
+        }
+      }
+    },
+    "/posts/capsules/mine": {
+      "get": {
+        "summary": "List my sealed time capsule posts",
+        "tags": [
+          "Posts"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "List of pending capsule posts with reveal dates"
+          }
+        }
+      }
+    },
+    "/posts/{postId}/seal": {
+      "post": {
+        "summary": "Seal a post as a time capsule",
+        "description": "The post will be hidden until the revealAt date, then automatically published.",
+        "tags": [
+          "Posts"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "postId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "revealAt"
+                ],
+                "properties": {
+                  "revealAt": {
+                    "type": "string",
+                    "format": "date-time",
+                    "example": "2027-01-01T00:00:00Z"
+                  },
+                  "hint": {
+                    "type": "string",
+                    "maxLength": 150,
+                    "example": "Something big is coming..."
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Post sealed successfully"
+          }
+        }
+      },
+      "delete": {
+        "summary": "Cancel (unseal) a time capsule before reveal",
+        "tags": [
+          "Posts"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "postId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Capsule cancelled and post restored"
+          }
+        }
+      }
+    },
+    "/privacy/audit-log": {
+      "get": {
+        "summary": "Get your privacy audit log",
+        "description": "See all events related to your data — profile views, post views, search appearances. Non-followers are shown as anonymous.",
+        "tags": [
+          "Privacy"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/PageParam"
+          },
+          {
+            "$ref": "#/components/parameters/LimitParam"
+          },
+          {
+            "in": "query",
+            "name": "event",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "profile_viewed",
+                "post_viewed",
+                "search_appeared",
+                "follow_request_sent",
+                "data_exported",
+                "message_request_sent"
+              ]
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Paginated privacy audit log"
+          }
+        }
+      },
+      "delete": {
+        "summary": "Delete all your privacy logs (GDPR right to erasure)",
+        "tags": [
+          "Privacy"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "All logs deleted"
+          }
+        }
+      }
+    },
+    "/privacy/profile-views": {
+      "get": {
+        "summary": "Get profile view analytics for the past 30 days",
+        "tags": [
+          "Privacy"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Total views + daily breakdown chart data"
+          }
+        }
+      }
+    },
+    "/privacy/audit-log/summary": {
+      "get": {
+        "summary": "Weekly summary of privacy events by type",
+        "tags": [
+          "Privacy"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Count per event type for last 7 days"
+          }
+        }
+      }
+    },
+    "/reports": {
+      "post": {
+        "summary": "Create a new report",
+        "tags": [
+          "Reports"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Report"
+              },
+              "example": {
+                "targetType": "post",
+                "targetId": "64a1b2c3d4e5f6g7h8i9j0k1",
+                "reason": "spam",
+                "details": "This post is promotional spam"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Report submitted successfully"
+          },
+          "400": {
+            "description": "Validation error"
+          }
+        }
+      },
+      "get": {
+        "summary": "Get all reports (Moderator/Admin only)",
+        "tags": [
+          "Reports"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "query",
+            "name": "status",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "pending",
+                "reviewed",
+                "resolved",
+                "dismissed"
+              ]
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "List of reports"
+          },
+          "403": {
+            "description": "Access denied"
+          }
+        }
+      }
+    },
+    "/reports/{id}/status": {
+      "patch": {
+        "summary": "Update report status (Moderator/Admin only)",
+        "tags": [
+          "Reports"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "status": {
+                    "type": "string",
+                    "enum": [
+                      "pending",
+                      "reviewed",
+                      "resolved",
+                      "dismissed"
+                    ]
+                  },
+                  "resolution": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Status updated"
+          },
+          "404": {
+            "description": "Report not found"
+          }
+        }
+      }
+    },
+    "/stickers": {
+      "get": {
+        "summary": "Get all available stickers",
+        "tags": [
+          "Stickers"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "query",
+            "name": "category",
+            "schema": {
+              "type": "string"
+            },
+            "description": "Filter by category"
+          },
+          {
+            "in": "query",
+            "name": "search",
+            "schema": {
+              "type": "string"
+            },
+            "description": "Full-text search on name/tags"
+          },
+          {
+            "in": "query",
+            "name": "page",
+            "schema": {
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "List of stickers"
+          }
+        }
+      },
+      "post": {
+        "summary": "Create a new sticker (Admin only)",
+        "tags": [
+          "Stickers"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "image": {
+                    "type": "string",
+                    "format": "binary"
+                  },
+                  "name": {
+                    "type": "string"
+                  },
+                  "category": {
+                    "type": "string"
+                  },
+                  "tags": {
+                    "type": "string",
+                    "description": "Comma-separated tags"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Sticker created"
+          }
+        }
+      }
+    },
+    "/stickers/categories": {
+      "get": {
+        "summary": "Get all sticker categories",
+        "tags": [
+          "Stickers"
+        ],
+        "responses": {
+          "200": {
+            "description": "List of categories"
+          }
+        }
+      }
+    },
+    "/stickers/me/collection": {
+      "get": {
+        "summary": "Get the authenticated user's sticker collection",
+        "tags": [
+          "Stickers"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "User's saved stickers"
+          }
+        }
+      }
+    },
+    "/stickers/{stickerId}": {
+      "get": {
+        "summary": "Get a single sticker by ID",
+        "tags": [
+          "Stickers"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "stickerId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Sticker details"
+          }
+        }
+      },
+      "delete": {
+        "summary": "Delete a sticker (Admin only)",
+        "tags": [
+          "Stickers"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "stickerId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Sticker deleted"
+          }
+        }
+      }
+    },
+    "/stickers/{stickerId}/collect": {
+      "post": {
+        "summary": "Toggle sticker in/out of user's personal collection",
+        "tags": [
+          "Stickers"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "stickerId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Collection updated"
+          }
+        }
+      }
+    },
+    "/stickers/{stickerId}/moderate": {
+      "patch": {
+        "summary": "Flag or unflag sticker as offensive (Admin only)",
+        "tags": [
+          "Stickers"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "stickerId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "isOffensive": {
+                    "type": "boolean"
+                  },
+                  "reason": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Sticker moderation updated"
+          }
+        }
+      }
+    },
+    "/stories": {
+      "post": {
+        "summary": "Publish a new expiring story",
+        "tags": [
+          "Stories"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "media": {
+                    "type": "string",
+                    "format": "binary"
+                  },
+                  "text": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Formatted story created natively"
+          }
+        }
+      }
+    },
+    "/stories/feed": {
+      "get": {
+        "summary": "Get stories feed from followed accounts",
+        "tags": [
+          "Stories"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Actively running stories from network"
+          }
+        }
+      }
+    },
+    "/stories/user/{userId}": {
+      "get": {
+        "summary": "View the stories belonging to an exact user",
+        "tags": [
+          "Stories"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "userId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Available timeline artifacts explicitly generated"
+          }
+        }
+      }
+    },
+    "/stories/{storyId}/view": {
+      "post": {
+        "summary": "Record viewed status",
+        "tags": [
+          "Stories"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "storyId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Add self implicitly to viewer list"
+          }
+        }
+      }
+    },
+    "/stories/{storyId}/reaction": {
+      "post": {
+        "summary": "Send a fast reaction to a story",
+        "tags": [
+          "Stories"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "storyId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Sent an emoji or emotion action properly"
+          }
+        }
+      }
+    },
+    "/stories/{storyId}/highlight": {
+      "post": {
+        "summary": "Convert story to an archived highlight section",
+        "tags": [
+          "Stories"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "storyId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Story properly stored on profile unconditionally"
+          }
+        }
+      }
+    },
+    "/stories/{storyId}": {
+      "delete": {
+        "summary": "Delete a story artifact before global exit logic runs",
+        "tags": [
+          "Stories"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "storyId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Deleted natively from storage safely"
+          }
+        }
+      }
+    },
+    "/users/me": {
+      "get": {
+        "summary": "Get current logged in user details",
+        "tags": [
+          "Users"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "User profile details"
+          }
+        }
+      },
+      "patch": {
+        "summary": "Update profile details",
+        "tags": [
+          "Users"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "displayName": {
+                    "type": "string"
+                  },
+                  "bio": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Profile updated"
+          }
+        }
+      },
+      "delete": {
+        "summary": "Delete user account completely",
+        "tags": [
+          "Users"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Account deleted successfully"
+          }
+        }
+      }
+    },
+    "/users/me/saved-posts": {
+      "get": {
+        "summary": "Get saved posts for current user",
+        "tags": [
+          "Users"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "List of saved posts"
+          }
+        }
+      }
+    },
+    "/users/me/avatar": {
+      "patch": {
+        "summary": "Upload profile avatar",
+        "tags": [
+          "Users"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "avatar": {
+                    "type": "string",
+                    "format": "binary"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Avatar uploaded"
+          }
+        }
+      }
+    },
+    "/users/me/cover": {
+      "patch": {
+        "summary": "Upload profile cover photo",
+        "tags": [
+          "Users"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "cover": {
+                    "type": "string",
+                    "format": "binary"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Cover uploaded"
+          }
+        }
+      }
+    },
+    "/users/search": {
+      "get": {
+        "summary": "Search for users",
+        "tags": [
+          "Users"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "query",
+            "name": "q",
+            "schema": {
+              "type": "string"
+            },
+            "description": "Search query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "A list of users matching query"
+          }
+        }
+      }
+    },
+    "/users/{username}": {
+      "get": {
+        "summary": "Get user profile by username",
+        "tags": [
+          "Users"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "username",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "User profile"
+          }
+        }
+      }
+    },
+    "/users/{userId}/follow": {
+      "post": {
+        "summary": "Follow or unfollow a user",
+        "tags": [
+          "Users"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "userId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Follow status updated"
+          }
+        }
+      }
+    },
+    "/users/{userId}/followers": {
+      "get": {
+        "summary": "Get followers of a user",
+        "tags": [
+          "Users"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "userId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "List of followers"
+          }
+        }
+      }
+    },
+    "/users/{userId}/following": {
+      "get": {
+        "summary": "Get users followed by a user",
+        "tags": [
+          "Users"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "userId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "List of following"
+          }
+        }
+      }
+    },
+    "/users/{userId}/block": {
+      "post": {
+        "summary": "Block or unblock a user",
+        "tags": [
+          "Users"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "userId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Block status updated"
+          }
+        }
+      }
+    },
+    "/users/{userId}/mute": {
+      "post": {
+        "summary": "Mute or unmute a user",
+        "tags": [
+          "Users"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "userId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Mute status updated"
+          }
+        }
+      }
+    },
+    "/webhooks": {
+      "post": {
+        "summary": "Register a new webhook",
+        "tags": [
+          "Webhooks"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "url",
+                  "events"
+                ],
+                "properties": {
+                  "url": {
+                    "type": "string",
+                    "format": "uri",
+                    "example": "https://myapp.com/hooks/social"
+                  },
+                  "events": {
+                    "type": "array",
+                    "items": {
+                      "type": "string",
+                      "enum": [
+                        "post.created",
+                        "post.liked",
+                        "post.commented",
+                        "post.shared",
+                        "user.followed",
+                        "comment.added",
+                        "capsule.revealed"
+                      ]
+                    }
+                  },
+                  "description": {
+                    "type": "string",
+                    "maxLength": 200
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Webhook registered. Secret shown only once."
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          }
+        }
+      },
+      "get": {
+        "summary": "List all my webhooks",
+        "tags": [
+          "Webhooks"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Array of webhooks (secret excluded)"
+          }
+        }
+      }
+    },
+    "/webhooks/{id}": {
+      "delete": {
+        "summary": "Delete a webhook",
+        "tags": [
+          "Webhooks"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Deleted"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          }
+        }
+      }
+    },
+    "/webhooks/{id}/toggle": {
+      "patch": {
+        "summary": "Enable or disable a webhook",
+        "tags": [
+          "Webhooks"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "isActive": {
+                    "type": "boolean"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Webhook updated"
+          }
+        }
+      }
+    },
+    "/webhooks/{id}/test": {
+      "post": {
+        "summary": "Send a test delivery to a webhook URL",
+        "tags": [
+          "Webhooks"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Test payload dispatched"
+          }
+        }
+      }
+    }
+  }
+}

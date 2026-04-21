@@ -54,10 +54,7 @@ describe('AuthController Unit Tests', () => {
 
       await authController.signup(mockReq, mockRes, mockNext);
 
-      expect(mockRes.status).toHaveBeenCalledWith(400);
-      expect(mockRes.json).toHaveBeenCalledWith(expect.objectContaining({
-        message: 'Email or username already exists'
-      }));
+      expect(mockNext).toHaveBeenCalledWith(expect.objectContaining({ statusCode: 409 }));
     });
 
     it('should create user and send token', async () => {
@@ -80,7 +77,7 @@ describe('AuthController Unit Tests', () => {
     it('should return 400 if missing email or password', async () => {
       mockReq.body = { email: 'test@example.com' };
       await authController.login(mockReq, mockRes, mockNext);
-      expect(mockRes.status).toHaveBeenCalledWith(400);
+      expect(mockNext).toHaveBeenCalledWith(expect.objectContaining({ statusCode: 400 }));
     });
 
     it('should return 401 if user not found or bad password', async () => {
@@ -99,7 +96,7 @@ describe('AuthController Unit Tests', () => {
 
       expect(mockUser.loginAttempts).toBe(1);
       expect(mockUser.save).toHaveBeenCalled();
-      expect(mockRes.status).toHaveBeenCalledWith(401);
+      expect(mockNext).toHaveBeenCalledWith(expect.objectContaining({ statusCode: 401 }));
     });
 
     it('should lock account on 5th bad attempt', async () => {
@@ -132,7 +129,7 @@ describe('AuthController Unit Tests', () => {
 
       await authController.login(mockReq, mockRes, mockNext);
 
-      expect(mockRes.status).toHaveBeenCalledWith(423);
+      expect(mockNext).toHaveBeenCalledWith(expect.objectContaining({ statusCode: 423 }));
     });
 
     it('should require 2FA code if enabled', async () => {
@@ -218,7 +215,7 @@ describe('AuthController Unit Tests', () => {
 
       await authController.verify2FA(mockReq, mockRes, mockNext);
 
-      expect(mockRes.status).toHaveBeenCalledWith(400);
+      expect(mockNext).toHaveBeenCalledWith(expect.objectContaining({ statusCode: 400 }));
     });
   });
   
@@ -246,7 +243,7 @@ describe('AuthController Unit Tests', () => {
 
       await authController.forgotPassword(mockReq, mockRes, mockNext);
       
-      expect(mockRes.status).toHaveBeenCalledWith(404);
+      expect(mockNext).toHaveBeenCalledWith(expect.objectContaining({ statusCode: 404 }));
     });
   });
   

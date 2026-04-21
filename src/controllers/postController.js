@@ -4,6 +4,8 @@ const Comment = require('../models/Comment');
 const NotificationService = require('../services/notificationService');
 const ContentModeration = require('../services/contentModeration');
 const GamificationService = require('../services/gamificationService');
+const WebhookService = require('../services/webhookService');
+const EchoChamberService = require('../services/echoChamberService');
 const cloudinary = require('../config/cloudinary');
 const logger = require('../utils/logger');
 const { AppError } = require('../middleware/errorHandler');
@@ -84,6 +86,14 @@ class PostController {
 
       // Add gamification points (10 points for creating a post)
       GamificationService.addPoints(req.user._id, 10).catch(err => logger.error('Gamification error:', err));
+
+      // 🔗 Webhook: notify subscribers
+      WebhookService.trigger('post.created', {
+        postId: post._id,
+        authorId: req.user._id,
+        visibility: post.visibility,
+        hashtags: post.hashtags,
+      }).catch(() => {});
 
       res.status(201).json({
         status: 'success',
@@ -286,6 +296,17 @@ class PostController {
 
       await post.save();
 
+      // 🔗 Webhook + 🫧 Echo Chamber (only on new like, not on unlike)
+      if (!existingLike) {
+        WebhookService.trigger('post.liked', {
+          postId,
+          likedBy: userId,
+          reaction,
+        }).catch(() => {});
+
+        EchoChamberService.trackInteraction(userId, postId, 'like').catch(() => {});
+      }
+
       res.status(200).json({
         status: 'success',
         data: {
@@ -339,6 +360,15 @@ class PostController {
           post: postId,
         });
       }
+
+      // 🔗 Webhook + 🫧 Echo Chamber
+      WebhookService.trigger('post.shared', {
+        originalPostId: postId,
+        sharedPostId: sharedPost._id,
+        sharedBy: userId,
+      }).catch(() => {});
+
+      EchoChamberService.trackInteraction(userId, postId, 'share').catch(() => {});
 
       res.status(201).json({
         status: 'success',

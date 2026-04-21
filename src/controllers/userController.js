@@ -4,7 +4,8 @@ const FollowRequest = require('../models/FollowRequest');
 const cloudinary = require('../config/cloudinary');
 const { AppError } = require('../middleware/errorHandler');
 const AuditLog = require('../models/AuditLog');
-const NotificationService = require('../services/notificationService'); // ✅ إضافة هذا السطر
+const PrivacyLog = require('../models/PrivacyLog');
+const NotificationService = require('../services/notificationService');
 
 class UserController {
   async getMe(req, res, next) {
@@ -49,10 +50,7 @@ class UserController {
   async uploadAvatar(req, res, next) {
     try {
       if (!req.file) {
-        return res.status(400).json({
-          status: 'fail',
-          message: 'No file uploaded',
-        });
+        return next(new AppError('No file uploaded', 400));
       }
 
       const result = await cloudinary.uploader.upload(req.file.path, {
@@ -117,20 +115,14 @@ class UserController {
         .select('-email -twoFactorSecret -loginAttempts -lockUntil -passwordChangedAt');
 
       if (!user) {
-        return res.status(404).json({
-          status: 'fail',
-          message: 'User not found',
-        });
+        return next(new AppError('User not found', 404));
       }
 
       const isFollowing = req.user ? user.followers.includes(req.user._id) : false;
       const isSelf = req.user ? req.user._id.toString() === user._id.toString() : false;
 
       if (user.privacySettings.profileVisibility === 'private' && !isSelf && !isFollowing) {
-        return res.status(403).json({
-          status: 'fail',
-          message: 'This profile is private',
-        });
+        return next(new AppError('This profile is private', 403));
       }
 
       const posts = await Post.find({
@@ -151,6 +143,17 @@ class UserController {
           posts,
         },
       });
+
+      // 🔒 Log profile view (fire-and-forget, never blocks)
+      if (!isSelf) {
+        PrivacyLog.create({
+          targetUser: user._id,
+          actor: req.user?._id || null,
+          event: 'profile_viewed',
+          source: 'direct',
+        }).catch(() => {});
+      }
+
     } catch (error) {
       next(error);
     }
@@ -162,18 +165,12 @@ class UserController {
       const currentUserId = req.user._id;
 
       if (userId === currentUserId.toString()) {
-        return res.status(400).json({
-          status: 'fail',
-          message: 'Cannot follow yourself',
-        });
+        return next(new AppError('Cannot follow yourself', 400));
       }
 
       const targetUser = await User.findById(userId);
       if (!targetUser) {
-        return res.status(404).json({
-          status: 'fail',
-          message: 'User not found',
-        });
+        return next(new AppError('User not found', 404));
       }
 
       const isFollowing = targetUser.followers.includes(currentUserId);
@@ -248,10 +245,7 @@ class UserController {
       });
 
       if (!user) {
-        return res.status(404).json({
-          status: 'fail',
-          message: 'User not found',
-        });
+        return next(new AppError('User not found', 404));
       }
 
       res.status(200).json({
@@ -269,10 +263,7 @@ class UserController {
       const { q, page = 1, limit = 20 } = req.query;
 
       if (!q || q.length < 2) {
-        return res.status(400).json({
-          status: 'fail',
-          message: 'Query must be at least 2 characters',
-        });
+        return next(new AppError('Query must be at least 2 characters', 400));
       }
 
       const users = await User.find(
@@ -343,10 +334,7 @@ class UserController {
 
       const user = await User.findById(req.user._id).select('+password');
       if (!(await user.comparePassword(password))) {
-        return res.status(401).json({
-          status: 'fail',
-          message: 'Incorrect password',
-        });
+        return next(new AppError('Incorrect password', 401));
       }
 
       user.accountDeleted = true;
@@ -380,10 +368,7 @@ class UserController {
   async uploadCover(req, res, next) {
     try {
       if (!req.file) {
-        return res.status(400).json({
-          status: 'fail',
-          message: 'No file uploaded',
-        });
+        return next(new AppError('No file uploaded', 400));
       }
 
       const result = await cloudinary.uploader.upload(req.file.path, {
@@ -429,10 +414,7 @@ class UserController {
       });
 
       if (!user) {
-        return res.status(404).json({ 
-          status: 'fail', 
-          message: 'User not found' 
-        });
+        return next(new AppError('User not found', 404));
       }
 
       res.status(200).json({
