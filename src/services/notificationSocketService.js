@@ -30,6 +30,22 @@ class NotificationSocketService {
         })).catch(err => logger.error('Redis publish error (typing):', err));
       });
 
+      // WebRTC Signaling
+      socket.on('call-user', ({ userToCall, signalData, from, name }) => {
+        // Send signal via redis so it crosses instances if needed
+        redis.publisher.publish(`call:${userToCall}`, JSON.stringify({
+          type: 'incoming-call',
+          data: { signal: signalData, from, name }
+        })).catch(err => logger.error('Redis publish error (call):', err));
+      });
+
+      socket.on('answer-call', ({ to, signal }) => {
+        redis.publisher.publish(`call:${to}`, JSON.stringify({
+          type: 'call-accepted',
+          data: { signal }
+        })).catch(err => logger.error('Redis publish error (answer):', err));
+      });
+
       // Broadcast online status to all connected clients
       this.io.emit('user-status', { userId, status: 'online' });
 
@@ -58,7 +74,7 @@ class NotificationSocketService {
       logger.error('NotificationSocketService subscriber error:', err.message);
     });
 
-    this.pSubscriber.psubscribe('notifications:*', 'messages:*', 'typing:*', (err) => {
+    this.pSubscriber.psubscribe('notifications:*', 'messages:*', 'typing:*', 'call:*', (err) => {
       if (err) {
         logger.error('Redis psubscribe error:', err);
         return;

@@ -105,6 +105,34 @@ router.post('/audio',
 
 /**
  * @swagger
+ * /posts/{postId}/comments/sticker:
+ *   post:
+ *     summary: Add a sticker comment to a post
+ *     tags: [Comments]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               stickerId:
+ *                 type: string
+ *               parentCommentId:
+ *                 type: string
+ *     responses:
+ *       201:
+ *         description: Sticker comment added
+ */
+router.post('/sticker',
+  auth.protect,
+  rateLimiter.post,
+  commentController.createStickerComment
+);
+
+/**
+ * @swagger
  * /comments/audio/{audioCommentId}/play:
  *   post:
  *     summary: Record audio play event

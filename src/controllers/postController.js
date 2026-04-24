@@ -25,10 +25,11 @@ class PostController {
       const mentions = this.extractMentions(content);
       const hashtags = this.extractHashtags(content);
 
-      // Process media uploads if provided
+      // Process media uploads if provided (multer puts files in req.files)
       const processedMedia = [];
-      if (media && media.length > 0) {
-        for (const file of media) {
+      const uploadedFiles = req.files || [];
+      if (uploadedFiles.length > 0) {
+        for (const file of uploadedFiles) {
           const result = await cloudinary.uploadToCloudinary(file.path, 'posts');
           processedMedia.push({
             type: file.mimetype.startsWith('image/') ? 'image' : 'video',
@@ -517,6 +518,72 @@ class PostController {
     }
     return null;
   }
+
+  getPostReactions = async (req, res, next) => {
+    try {
+      const { postId } = req.params;
+      const KEYS = ['like', 'love', 'laugh', 'wow', 'sad', 'angry'];
+      const post = await Post.findById(postId).select('reactions');
+      if (!post) return res.status(404).json({ status: 'fail', message: 'Post not found' });
+      const data = {};
+      let total = 0;
+      for (const k of KEYS) {
+        const ids = (post.reactions && post.reactions[k]) || [];
+        if (ids.length > 0) {
+          data[k] = await User.find({ _id: { $in: ids } }).select('username displayName avatar isVerified').lean();
+        } else {
+          data[k] = [];
+        }
+        total += data[k].length;
+      }
+      data.all = KEYS.flatMap(k => data[k]);
+      res.status(200).json({ status: 'success', data: { reactions: data, total } });
+    } catch (error) { next(error); }
+  };
+
+  savePost = async (req, res, next) => {
+    try {
+      const { postId } = req.params;
+      const userId = req.user._id;
+      const postExists = await Post.exists({ _id: postId });
+      if (!postExists) return res.status(404).json({ status: 'fail', message: 'Post not found' });
+      const user = await User.findById(userId).select('savedPosts');
+      const isSaved = user.savedPosts.some(id => id.toString() === postId.toString());
+      if (isSaved) {
+        user.savedPosts = user.savedPosts.filter(id => id.toString() !== postId.toString());
+      } else {
+        user.savedPosts.unshift(postId);
+      }
+      await user.save();
+      res.status(200).json({ status: 'success', data: { isSaved: !isSaved } });
+    } catch (error) { next(error); }
+  };
+
+  getSavedPosts = async (req, res, next) => {
+    try {
+      const { page = 1, limit = 10 } = req.query;
+      const skip = (parseInt(page) - 1) * parseInt(limit);
+      const user = await User.findById(req.user._id).select('savedPosts');
+      if (!user) return res.status(404).json({ status: 'fail', message: 'User not found' });
+      const postIds = user.savedPosts.slice(skip, skip + parseInt(limit));
+      const posts = await Post.find({ _id: { $in: postIds } })
+        .populate('author', 'username displayName avatar isVerified').lean();
+      const ordered = postIds.map(id => posts.find(p => p._id.toString() === id.toString())).filter(Boolean);
+      res.status(200).json({ status: 'success', results: ordered.length, total: user.savedPosts.length, data: { posts: ordered } });
+    } catch (error) { next(error); }
+  };
+
+  getPostLikes = async (req, res, next) => {
+    try {
+      const { postId } = req.params;
+      const { page = 1, limit = 30 } = req.query;
+      const post = await Post.findById(postId).select('likes')
+        .populate({ path: 'likes', select: 'username displayName avatar isVerified', options: { skip: (page - 1) * limit, limit: parseInt(limit) } });
+      if (!post) return res.status(404).json({ status: 'fail', message: 'Post not found' });
+      res.status(200).json({ status: 'success', results: post.likes.length, data: { likes: post.likes } });
+    } catch (error) { next(error); }
+  };
+
 }
 
 module.exports = new PostController();

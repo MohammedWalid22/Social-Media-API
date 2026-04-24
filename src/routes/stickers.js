@@ -93,7 +93,7 @@ router.get('/:stickerId', stickerController.getStickerById);
  * @swagger
  * /stickers:
  *   post:
- *     summary: Create a new sticker (Admin only)
+ *     summary: Create a new custom sticker
  *     tags: [Stickers]
  *     security:
  *       - bearerAuth: []
@@ -120,13 +120,6 @@ router.get('/:stickerId', stickerController.getStickerById);
 router.post(
   '/',
   auth.protect,
-  // Only admins can create stickers
-  (req, res, next) => {
-    if (req.user.role !== 'admin') {
-      return res.status(403).json({ status: 'fail', message: 'Only admins can create stickers' });
-    }
-    next();
-  },
   upload.single('image'),
   stickerController.createSticker
 );

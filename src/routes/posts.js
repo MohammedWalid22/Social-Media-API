@@ -76,6 +76,12 @@ router.post('/',
   postController.createPost
 );
 
+// GET saved posts — must come before /:postId routes
+router.get('/saved',
+  auth.protect,
+  (req, res, next) => postController.getSavedPosts(req, res, next)
+);
+
 /**
  * @swagger
  * /posts/{postId}:
@@ -218,6 +224,32 @@ router.post('/:postId/like',
   rateLimiter.api,
   validators.objectId('postId'),
   (req, res, next) => postController.likePost(req, res, next)
+);
+
+// GET reactions with users per type (for modal with tabs)
+router.get('/:postId/reactions',
+  auth.protect,
+  validators.objectId('postId'),
+  (req, res, next) => postController.getPostReactions(req, res, next)
+);
+
+// GET list of users who liked a post
+router.get('/:postId/likes',
+  auth.protect,
+  validators.objectId('postId'),
+  (req, res, next) => postController.getPostLikes(req, res, next)
+);
+
+// Toggle save/unsave + get saved posts
+router.post('/:postId/save',
+  auth.protect,
+  validators.objectId('postId'),
+  (req, res, next) => postController.savePost(req, res, next)
+);
+
+router.get('/saved',
+  auth.protect,
+  (req, res, next) => postController.getSavedPosts(req, res, next)
 );
 
 /**

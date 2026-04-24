@@ -1,7 +1,8 @@
 const Sticker = require('../models/Sticker');
 const User = require('../models/User');
-const cloudinary = require('../config/cloudinary');
+const { cloudinary, uploadToCloudinary } = require('../config/cloudinary');
 const logger = require('../utils/logger');
+const fs = require('fs');
 
 class StickerController {
   /**
@@ -20,7 +21,12 @@ class StickerController {
       const query = { isActive: true, isOffensive: false };
 
       if (category) query.category = category;
-      if (pack) query.pack = pack;
+      if (pack) {
+        query.pack = pack;
+      } else {
+        // By default, exclude custom stickers from the public store
+        query.pack = { $ne: 'custom' };
+      }
       if (search) query.$text = { $search: search };
 
       const stickers = await Sticker.find(query)
@@ -85,7 +91,7 @@ class StickerController {
   };
 
   /**
-   * POST /stickers — Admin creates a new sticker (upload to Cloudinary)
+   * POST /stickers — Create a new sticker (Custom for users, Official for Admins)
    */
   createSticker = async (req, res, next) => {
     try {
@@ -94,13 +100,17 @@ class StickerController {
       }
 
       const { name, category, pack, tags, emoji, isAnimated } = req.body;
+      const isAdmin = req.user.role === 'admin';
 
       // Upload to Cloudinary under stickers folder
       const uploadResult = await cloudinary.uploader.upload(req.file.path, {
-        folder: 'stickers',
+        folder: 'social-app/stickers',
         resource_type: 'image',
         transformation: [{ width: 256, height: 256, crop: 'fit' }],
       });
+
+      // Cleanup temp file
+      fs.unlink(req.file.path, () => {});
 
       // Also create a thumbnail
       const thumbnailUrl = cloudinary.url(uploadResult.public_id, {
@@ -108,9 +118,9 @@ class StickerController {
       });
 
       const sticker = await Sticker.create({
-        name,
-        category: category || 'reactions',
-        pack: pack || 'default',
+        name: name || `Sticker_${Date.now()}`,
+        category: isAdmin ? (category || 'reactions') : 'custom',
+        pack: isAdmin ? (pack || 'default') : 'custom',
         imageUrl: uploadResult.secure_url,
         publicId: uploadResult.public_id,
         thumbnailUrl,
@@ -120,8 +130,13 @@ class StickerController {
         createdBy: req.user._id,
       });
 
+      // Automatically add to user's collection
+      await User.findByIdAndUpdate(req.user._id, { $addToSet: { stickerCollection: sticker._id } });
+
       res.status(201).json({ status: 'success', data: { sticker } });
     } catch (error) {
+      // Cleanup on error
+      if (req.file?.path) fs.unlink(req.file.path, () => {});
       next(error);
     }
   };

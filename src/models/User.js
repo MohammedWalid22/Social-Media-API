@@ -158,6 +158,9 @@ role: {
   },
   accountDeleted: { type: Boolean, default: false },
   deletionScheduledAt: Date,
+
+  // Saved Posts
+  savedPosts: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Post' }],
 }, {
   timestamps: true,
   toJSON: { virtuals: true },

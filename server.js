@@ -6,6 +6,7 @@ const database = require('./src/config/database');
 const NotificationSocketService = require('./src/services/notificationSocketService');
 const cron = require('node-cron');
 const TimeCapsuleService = require('./src/services/timeCapsuleService');
+const nms = require('./nms');
 
 const PORT = process.env.PORT || 3000;
 const NODE_ENV = process.env.NODE_ENV || 'development';
@@ -33,6 +34,14 @@ const startServer = async () => {
         );
       });
       console.log('⏳ Time Capsule cron job started (checks every minute)');
+      
+      // Start Live Streaming RTMP Server
+      try {
+        nms.run();
+        console.log('📡 Node Media Server (RTMP/HLS) running...');
+      } catch (err) {
+        console.error('NMS Error (Is FFmpeg installed?):', err.message);
+      }
     }
 
     process.on('unhandledRejection', (err) => {

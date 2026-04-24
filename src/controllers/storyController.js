@@ -1,6 +1,6 @@
 const Story = require('../models/Story');
 const User = require('../models/User');
-const cloudinary = require('../config/cloudinary');
+const { cloudinary, uploadToCloudinary, deleteFromCloudinary, getPublicIdFromUrl } = require('../config/cloudinary');
 const { AppError } = require('../middleware/errorHandler');
 
 class StoryController {
@@ -17,11 +17,17 @@ class StoryController {
       } else if (req.file) {
         // Upload media
         const result = await cloudinary.uploader.upload(req.file.path, {
-          folder: 'stories',
-          resource_type: type === 'video' ? 'video' : 'image',
+          folder: 'social-app/stories',
+          resource_type: req.file.mimetype?.startsWith('video') ? 'video' : 'image',
         });
         
         content.url = result.secure_url;
+        content.type = req.file.mimetype?.startsWith('video') ? 'video' : 'image';
+
+        // Cleanup temp file
+        require('fs').unlink(req.file.path, () => {});
+      } else {
+        return res.status(400).json({ status: 'fail', message: 'Media file is required' });
       }
 
       const story = await Story.create({
@@ -37,6 +43,7 @@ class StoryController {
         data: { story },
       });
     } catch (error) {
+      if (req.file?.path) require('fs').unlink(req.file.path, () => {});
       next(error);
     }
   }
@@ -227,9 +234,9 @@ class StoryController {
 
       // Delete media from cloudinary if exists
       if (story.content?.url) {
-        const publicId = cloudinary.getPublicIdFromUrl(story.content.url);
+        const publicId = getPublicIdFromUrl(story.content.url);
         if (publicId) {
-          await cloudinary.deleteFromCloudinary(publicId);
+          await deleteFromCloudinary(publicId);
         }
       }
 

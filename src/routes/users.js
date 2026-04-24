@@ -88,6 +88,34 @@ router.get('/me/saved-posts',
 
 /**
  * @swagger
+ * /users/me/follow-requests:
+ *   get:
+ *     summary: Get pending follow requests
+ *     tags: [Users]
+ *     security:
+ *       - bearerAuth: []
+ */
+router.get('/me/follow-requests',
+  auth.protect,
+  userController.getFollowRequests
+);
+
+/**
+ * @swagger
+ * /users/me/follow-requests/{requestId}:
+ *   post:
+ *     summary: Accept or reject a follow request
+ *     tags: [Users]
+ *     security:
+ *       - bearerAuth: []
+ */
+router.post('/me/follow-requests/:requestId',
+  auth.protect,
+  userController.respondToFollowRequest
+);
+
+/**
+ * @swagger
  * /users/me/avatar:
  *   patch:
  *     summary: Upload profile avatar

@@ -1,14 +1,21 @@
 const ffmpeg = require('fluent-ffmpeg');
 const ffmpegStatic = require('ffmpeg-static');
+const ffprobeStatic = require('ffprobe-static');
 const path = require('path');
 const fs = require('fs').promises;
 const os = require('os');
 const logger = require('../utils/logger');
 const speech = require('@google-cloud/speech');
+const { uploadToCloudinary } = require('../config/cloudinary');
 
 // Set ffmpeg path if available
 if (ffmpegStatic) {
   ffmpeg.setFfmpegPath(ffmpegStatic);
+}
+
+// Set ffprobe path if available
+if (ffprobeStatic && ffprobeStatic.path) {
+  ffmpeg.setFfprobePath(ffprobeStatic.path);
 }
 
 class AudioProcessingService {
@@ -52,16 +59,19 @@ class AudioProcessingService {
       
       // Get audio metadata
       const metadata = await this.getAudioMetadata(outputPath);
+
+      // Upload to Cloudinary
+      const cloudinaryResult = await uploadToCloudinary(outputPath, 'social-app/audio');
       
       // Cleanup temp files
       await this.cleanup([inputPath, outputPath]);
       
       return {
-        url: 'https://example.com/processed-audio.mp3', // Placeholder until cloud upload is implemented
-        publicId: `audio_${Date.now()}`,
+        url: cloudinaryResult.url,
+        publicId: cloudinaryResult.publicId,
         duration: metadata.duration,
-        format: 'mp3',
-        size: metadata.size,
+        format: cloudinaryResult.format || 'mp3',
+        size: cloudinaryResult.size || metadata.size,
         bitrate: options.bitrate || 128000,
         waveformData,
         variants: [],

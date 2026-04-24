@@ -9,7 +9,7 @@ const NotificationService = require('../services/notificationService');
 const GamificationService = require('../services/gamificationService');
 const EchoChamberService = require('../services/echoChamberService');
 const WebhookService = require('../services/webhookService');
-const cloudinary = require('../config/cloudinary');
+const { cloudinary } = require('../config/cloudinary');
 const logger = require('../utils/logger');
 
 class CommentController {
@@ -370,10 +370,15 @@ class CommentController {
           select: '-__v -createdAt -updatedAt',
         })
         .populate({
+          path: 'sticker',
+          select: 'name imageUrl thumbnailUrl emoji isAnimated',
+        })
+        .populate({
           path: 'replies',
           populate: [
             { path: 'author', select: 'username displayName avatar' },
             { path: 'audioComment', select: 'audio.duration audio.url transcription.text accessibility.waveformData' },
+            { path: 'sticker', select: 'name imageUrl thumbnailUrl emoji isAnimated' },
           ],
           options: { limit: 3 },
         });

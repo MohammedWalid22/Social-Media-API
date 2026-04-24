@@ -24,23 +24,23 @@ const { nodeProfilingIntegration } = require('@sentry/profiling-node');
 const app = express();
 
 // Initialize Sentry only if not in test mode
-if (process.env.NODE_ENV !== 'test') {
+if (process.env.NODE_ENV !== 'test' && process.env.SENTRY_DSN) {
   Sentry.init({
     dsn: process.env.SENTRY_DSN,
     integrations: [
       nodeProfilingIntegration(),
     ],
     // Performance Monitoring
-    tracesSampleRate: 1.0, 
+    tracesSampleRate: 1.0,
     // Set sampling rate for profiling
     profilesSampleRate: 1.0,
     environment: process.env.NODE_ENV || 'development'
   });
 
-  // The request handler must be the first middleware on the app
-  app.use(Sentry.Handlers.requestHandler());
-  // TracingHandler creates a trace for every incoming request
-  app.use(Sentry.Handlers.tracingHandler());
+  // Sentry v8+ uses setupExpressErrorHandler instead of Handlers
+  if (Sentry.setupExpressErrorHandler) {
+    Sentry.setupExpressErrorHandler(app);
+  }
 }
 
 // Trust proxy (for nginx/docker)
@@ -94,10 +94,7 @@ app.all('*', (req, res, next) => {
   next(new AppError(`Route ${req.originalUrl} not found`, 404));
 });
 
-// Sentry error handler must be before any other error middleware and after all controllers
-if (process.env.NODE_ENV !== 'test') {
-  app.use(Sentry.Handlers.errorHandler());
-}
+// Sentry error handler is already registered above via setupExpressErrorHandler (Sentry v8+)
 
 // Global error handler
 app.use(errorHandler);

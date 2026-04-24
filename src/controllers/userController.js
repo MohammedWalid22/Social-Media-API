@@ -1,7 +1,7 @@
 const User = require('../models/User');
 const Post = require('../models/Post');
 const FollowRequest = require('../models/FollowRequest');
-const cloudinary = require('../config/cloudinary');
+const { cloudinary } = require('../config/cloudinary');
 const { AppError } = require('../middleware/errorHandler');
 const AuditLog = require('../models/AuditLog');
 const PrivacyLog = require('../models/PrivacyLog');
@@ -184,35 +184,40 @@ class UserController {
           id => id.toString() !== userId
         );
       } else {
-        // Follow
-        if (targetUser.privacySettings.profileVisibility === 'private') {
-          // Send follow request
-          await FollowRequest.create({
-            requester: currentUserId,
-            recipient: userId,
-            status: 'pending',
-          });
+        // Check if there is already a pending request
+        const existingRequest = await FollowRequest.findOne({
+          requester: currentUserId,
+          recipient: userId,
+          status: 'pending'
+        });
 
-          await NotificationService.create({
-            recipient: userId,
-            sender: currentUserId,
-            type: 'follow_request',
-          });
-
+        if (existingRequest) {
+          // Cancel the request
+          await FollowRequest.findByIdAndDelete(existingRequest._id);
           return res.status(200).json({
             status: 'success',
-            message: 'Follow request sent',
-            data: { requested: true },
+            message: 'Friend request cancelled',
+            data: { requested: false },
           });
         }
 
-        targetUser.followers.push(currentUserId);
-        req.user.following.push(userId);
+        // Always send a follow/friend request
+        await FollowRequest.create({
+          requester: currentUserId,
+          recipient: userId,
+          status: 'pending',
+        });
 
         await NotificationService.create({
           recipient: userId,
           sender: currentUserId,
-          type: 'follow',
+          type: 'follow_request',
+        });
+
+        return res.status(200).json({
+          status: 'success',
+          message: 'Friend request sent',
+          data: { requested: true },
         });
       }
 
@@ -421,6 +426,79 @@ class UserController {
         status: 'success',
         results: user.following.length,
         data: { following: user.following },
+      });
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  async getFollowRequests(req, res, next) {
+    try {
+      const requests = await FollowRequest.find({
+        recipient: req.user._id,
+        status: 'pending',
+      }).populate('requester', 'username displayName avatar isVerified');
+
+      res.status(200).json({
+        status: 'success',
+        results: requests.length,
+        data: { requests },
+      });
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  async respondToFollowRequest(req, res, next) {
+    try {
+      const { requestId } = req.params;
+      const { status } = req.body; // 'accepted' or 'rejected'
+
+      if (!['accepted', 'rejected'].includes(status)) {
+        return next(new AppError('Invalid status', 400));
+      }
+
+      const request = await FollowRequest.findOne({
+        _id: requestId,
+        recipient: req.user._id,
+        status: 'pending',
+      });
+
+      if (!request) {
+        return next(new AppError('Follow request not found or already processed', 404));
+      }
+
+      request.status = status;
+      await request.save();
+
+      if (status === 'accepted') {
+        const targetUser = await User.findById(req.user._id);
+        const requesterUser = await User.findById(request.requester);
+
+        if (targetUser && requesterUser) {
+          // Add to followers/following
+          if (!targetUser.followers.includes(request.requester)) {
+            targetUser.followers.push(request.requester);
+          }
+          if (!requesterUser.following.includes(req.user._id)) {
+            requesterUser.following.push(req.user._id);
+          }
+
+          await targetUser.save();
+          await requesterUser.save();
+
+          // Notify the requester that their request was accepted
+          await NotificationService.create({
+            recipient: request.requester,
+            sender: req.user._id,
+            type: 'follow', // Use 'follow' to indicate they are now following
+          });
+        }
+      }
+
+      res.status(200).json({
+        status: 'success',
+        message: `Request ${status}`,
       });
     } catch (error) {
       next(error);
