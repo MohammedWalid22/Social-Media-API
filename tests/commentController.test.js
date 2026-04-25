@@ -27,9 +27,11 @@ jest.mock('../src/middleware/errorHandler', () => ({
   }
 }));
 jest.mock('../src/config/cloudinary', () => ({
-  uploader: {
-    upload: jest.fn(),
-    destroy: jest.fn()
+  cloudinary: {
+    uploader: {
+      upload: jest.fn(),
+      destroy: jest.fn()
+    }
   }
 }));
 jest.mock('fs/promises', () => ({

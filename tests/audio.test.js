@@ -7,6 +7,26 @@ const AudioComment = require('../src/models/AudioComment');
 const path = require('path');
 const fs = require('fs');
 
+jest.mock('../src/services/audioProcessingService', () => ({
+  getAudioMetadata: jest.fn().mockResolvedValue({ duration: 30 }),
+  processAudio: jest.fn().mockResolvedValue({
+    url: 'https://example.com/audio.mp3',
+    publicId: 'test-audio',
+    duration: 30,
+    format: 'mp3',
+    size: 1024,
+    bitrate: 128,
+    waveformData: [1, 2, 3],
+    variants: []
+  }),
+  transcribeAudio: jest.fn().mockResolvedValue({ text: 'Test', processed: true }),
+  analyzeVoice: jest.fn().mockResolvedValue({})
+}));
+
+jest.mock('../src/services/audioModerationService', () => ({
+  moderateAudio: jest.fn().mockResolvedValue({ status: 'approved' })
+}));
+
 describe('Audio Features', () => {
   let token;
   let postId;

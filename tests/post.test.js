@@ -177,14 +177,14 @@ describe('Post Endpoints', () => {
         .post(`/api/v1/posts/${postId}/save`)
         .set('Authorization', `Bearer ${token}`);
       expect(res.statusCode).toBe(200);
-      expect(res.body.message).toBe('Post saved');
+      expect(res.body.data.isSaved).toBe(true);
 
       // Unsave
       const res2 = await request(app)
         .delete(`/api/v1/posts/${postId}/save`)
         .set('Authorization', `Bearer ${token}`);
       expect(res2.statusCode).toBe(200);
-      expect(res2.body.message).toBe('Post unsaved');
+      expect(res2.body.data.isSaved).toBe(false);
     });
   });
 

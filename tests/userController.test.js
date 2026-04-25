@@ -100,7 +100,7 @@ describe('UserController Unit Tests', () => {
         public_id: 'avatar_public_id'
       });
 
-      const mockUser = { save: jest.fn().mockResolvedValue(true) };
+      const mockUser = { avatar: {}, save: jest.fn().mockResolvedValue(true) };
       User.findById.mockResolvedValue(mockUser);
 
       await userController.uploadAvatar(mockReq, mockRes, mockNext);

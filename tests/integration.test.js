@@ -65,13 +65,13 @@ describe('Integration Tests - Full User Journey', () => {
       expect(res.body.data.post.hashtags).toContain('firstpost');
     });
 
-    it('Step 4: User 2 follows User 1', async () => {
+    it('Step 4: User 2 requests to follow User 1', async () => {
       const res = await request(app)
         .post(`/api/v1/users/${user1Id}/follow`)
         .set('Authorization', `Bearer ${user2Token}`);
       
       expect(res.statusCode).toBe(200);
-      expect(res.body.data.following).toBe(true);
+      expect(res.body.data.requested).toBe(true);
     });
 
     it('Step 5: User 2 likes User 1\'s post', async () => {
@@ -176,13 +176,13 @@ describe('Integration Tests - Full User Journey', () => {
       expect(res.body.data.messages.length).toBeGreaterThan(0);
     });
 
-    it('Step 14: User 2 unfollows User 1', async () => {
+    it('Step 14: User 2 cancels follow request to User 1', async () => {
       const res = await request(app)
         .post(`/api/v1/users/${user1Id}/follow`)
         .set('Authorization', `Bearer ${user2Token}`);
       
       expect(res.statusCode).toBe(200);
-      expect(res.body.data.following).toBe(false);
+      expect(res.body.data.requested).toBe(false);
     });
 
     it('Step 15: User 1 deletes their post', async () => {
