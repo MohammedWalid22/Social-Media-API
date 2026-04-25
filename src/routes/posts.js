@@ -284,17 +284,6 @@ router.post('/:postId/co-authors/respond',
 );
 
 // Mount comment routes - supports both text and audio comments
-router.post('/:postId/save', 
-  auth.protect, 
-  validators.objectId('postId'),
-  (req, res, next) => postController.savePost(req, res, next)
-);
-
-router.delete('/:postId/save', 
-  auth.protect, 
-  validators.objectId('postId'),
-  (req, res, next) => postController.unsavePost(req, res, next)
-);
 
 /**
  * @swagger

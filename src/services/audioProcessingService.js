@@ -13,9 +13,18 @@ if (ffmpegStatic) {
   ffmpeg.setFfmpegPath(ffmpegStatic);
 }
 
-// Set ffprobe path if available
-if (ffprobeStatic && ffprobeStatic.path) {
-  ffmpeg.setFfprobePath(ffprobeStatic.path);
+// Set ffprobe path if available - with proper error handling
+if (ffprobeStatic) {
+  try {
+    if (typeof ffprobeStatic === 'string') {
+      ffmpeg.setFfprobePath(ffprobeStatic);
+    } else if (ffprobeStatic.path) {
+      ffmpeg.setFfprobePath(ffprobeStatic.path);
+    }
+  } catch (error) {
+    logger.warn('Failed to set ffprobe path:', error.message);
+    // Continue without ffprobe - it may not be needed in all environments
+  }
 }
 
 class AudioProcessingService {

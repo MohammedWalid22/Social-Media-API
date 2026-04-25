@@ -1,6 +1,6 @@
 const Story = require('../models/Story');
 const User = require('../models/User');
-const { cloudinary, uploadToCloudinary, deleteFromCloudinary, getPublicIdFromUrl } = require('../config/cloudinary');
+const { cloudinary, deleteFromCloudinary, getPublicIdFromUrl } = require('../config/cloudinary');
 const { AppError } = require('../middleware/errorHandler');
 
 class StoryController {

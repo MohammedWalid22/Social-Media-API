@@ -417,39 +417,6 @@ class PostController {
   }
 
   // Helper methods
-  async savePost(req, res, next) {
-    try {
-      const { postId } = req.params;
-      const userId = req.user._id;
-
-      const post = await Post.findById(postId);
-      if (!post) return next(new AppError('Post not found', 404));
-
-      await User.findByIdAndUpdate(userId, {
-        $addToSet: { savedPosts: { post: postId } }
-      });
-
-      res.status(200).json({ status: 'success', message: 'Post saved' });
-    } catch (error) {
-      next(error);
-    }
-  }
-
-  async unsavePost(req, res, next) {
-    try {
-      const { postId } = req.params;
-      const userId = req.user._id;
-
-      await User.findByIdAndUpdate(userId, {
-        $pull: { savedPosts: { post: postId } }
-      });
-
-      res.status(200).json({ status: 'success', message: 'Post unsaved' });
-    } catch (error) {
-      next(error);
-    }
-  }
-
   extractMentions(text) {
     if (!text) return [];
     const mentionRegex = /@(\w+)/g;

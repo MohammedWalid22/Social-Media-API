@@ -1,6 +1,6 @@
 const Sticker = require('../models/Sticker');
 const User = require('../models/User');
-const { cloudinary, uploadToCloudinary } = require('../config/cloudinary');
+const { cloudinary } = require('../config/cloudinary');
 const logger = require('../utils/logger');
 const fs = require('fs');
 

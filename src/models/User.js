@@ -128,11 +128,7 @@ role: {
     ref: 'Sticker',
   }],
   
-  // Bookmarks / Saved Posts
-  savedPosts: [{
-    post: { type: mongoose.Schema.Types.ObjectId, ref: 'Post' },
-    savedAt: { type: Date, default: Date.now }
-  }],
+
   
   // Activity
   lastActive: { type: Date, default: Date.now },
