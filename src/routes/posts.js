@@ -247,6 +247,12 @@ router.post('/:postId/save',
   (req, res, next) => postController.savePost(req, res, next)
 );
 
+router.delete('/:postId/save',
+  auth.protect,
+  validators.objectId('postId'),
+  (req, res, next) => postController.unsavePost(req, res, next)
+);
+
 router.get('/saved',
   auth.protect,
   (req, res, next) => postController.getSavedPosts(req, res, next)

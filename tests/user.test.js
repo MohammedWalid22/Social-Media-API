@@ -77,7 +77,7 @@ describe('User Endpoints', () => {
         .set('Authorization', `Bearer ${token}`);
       
       expect(res.statusCode).toBe(200);
-      expect(res.body.data.following).toBe(true);
+      expect(res.body.data.requested).toBe(true);
     });
 
     it('should not allow following self', async () => {

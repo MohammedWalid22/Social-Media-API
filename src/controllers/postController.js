@@ -526,6 +526,17 @@ class PostController {
     } catch (error) { next(error); }
   };
 
+  unsavePost = async (req, res, next) => {
+    try {
+      const { postId } = req.params;
+      const userId = req.user._id;
+      const user = await User.findById(userId).select('savedPosts');
+      user.savedPosts = user.savedPosts.filter(id => id.toString() !== postId.toString());
+      await user.save();
+      res.status(200).json({ status: 'success', data: { isSaved: false } });
+    } catch (error) { next(error); }
+  };
+
   getSavedPosts = async (req, res, next) => {
     try {
       const { page = 1, limit = 10 } = req.query;

@@ -5,11 +5,13 @@ const Sticker = require('../src/models/Sticker');
 
 
 jest.mock('../src/config/cloudinary', () => ({
-  uploader: {
-    upload: jest.fn(),
-    destroy: jest.fn().mockResolvedValue(true)
-  },
-  url: jest.fn().mockReturnValue('mocked_thumbnail_url')
+  cloudinary: {
+    uploader: {
+      upload: jest.fn(),
+      destroy: jest.fn().mockResolvedValue(true)
+    },
+    url: jest.fn().mockReturnValue('mocked_thumbnail_url')
+  }
 }));
 
 describe('Stickers API Endpoints', () => {
