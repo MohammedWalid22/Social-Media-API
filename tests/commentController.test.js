@@ -274,6 +274,7 @@ describe('CommentController Unit Tests', () => {
       queryMock.populate
         .mockReturnValueOnce(queryMock)
         .mockReturnValueOnce(queryMock)
+        .mockReturnValueOnce(queryMock)
         .mockResolvedValueOnce(mockComments);
 
       Comment.find.mockReturnValue(queryMock);
@@ -336,11 +337,11 @@ describe('CommentController Unit Tests', () => {
       Comment.findById.mockResolvedValue(mockComment);
       Post.findById.mockResolvedValue(mockPost);
       AudioComment.findById.mockResolvedValue(mockAudioComment);
-      cloudinary.uploader.destroy.mockResolvedValue(true);
+      cloudinary.cloudinary.uploader.destroy.mockResolvedValue(true);
 
       await commentController.deleteComment(mockReq, mockRes, mockNext);
 
-      expect(cloudinary.uploader.destroy).toHaveBeenCalledWith('audio_pub', { resource_type: 'video' });
+      expect(cloudinary.cloudinary.uploader.destroy).toHaveBeenCalledWith('audio_pub', { resource_type: 'video' });
       expect(mockAudioComment.save).toHaveBeenCalled();
       expect(mockComment.save).toHaveBeenCalled();
       expect(mockPost.commentsCount).toBe(0);

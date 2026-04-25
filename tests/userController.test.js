@@ -19,9 +19,11 @@ jest.mock('../src/middleware/errorHandler', () => ({
   }
 }));
 jest.mock('../src/config/cloudinary', () => ({
-  uploader: {
-    upload: jest.fn(),
-    destroy: jest.fn()
+  cloudinary: {
+    uploader: {
+      upload: jest.fn(),
+      destroy: jest.fn()
+    }
   }
 }));
 jest.mock('../src/services/notificationService');
@@ -95,7 +97,7 @@ describe('UserController Unit Tests', () => {
 
     it('should upload to cloudinary and update avatar', async () => {
       mockReq.file = { path: 'temp/path.png' };
-      cloudinary.uploader.upload.mockResolvedValue({
+      cloudinary.cloudinary.uploader.upload.mockResolvedValue({
         secure_url: 'http://example.com/avatar.png',
         public_id: 'avatar_public_id'
       });
@@ -105,7 +107,7 @@ describe('UserController Unit Tests', () => {
 
       await userController.uploadAvatar(mockReq, mockRes, mockNext);
 
-      expect(cloudinary.uploader.upload).toHaveBeenCalled();
+      expect(cloudinary.cloudinary.uploader.upload).toHaveBeenCalled();
       expect(mockUser.avatar.url).toBe('http://example.com/avatar.png');
       expect(mockUser.save).toHaveBeenCalled();
       expect(mockRes.status).toHaveBeenCalledWith(200);
@@ -196,7 +198,7 @@ describe('UserController Unit Tests', () => {
       }));
     });
 
-    it('should follow and send notification if public profile', async () => {
+    it('should send a follow request and notification', async () => {
       mockReq.params.userId = 'target_id';
       const targetUser = {
         _id: 'target_id',
@@ -209,12 +211,10 @@ describe('UserController Unit Tests', () => {
 
       await userController.followUser(mockReq, mockRes, mockNext);
 
-      expect(targetUser.followers).toContain('current_user_id');
-      expect(mockReq.user.following).toContain('target_id');
       expect(NotificationService.create).toHaveBeenCalled();
       expect(mockRes.status).toHaveBeenCalledWith(200);
       expect(mockRes.json).toHaveBeenCalledWith(expect.objectContaining({
-        data: { following: true, followersCount: 1 }
+        data: { requested: true }
       }));
     });
   });

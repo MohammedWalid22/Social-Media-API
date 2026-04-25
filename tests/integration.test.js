@@ -112,6 +112,10 @@ describe('Integration Tests - Full User Journey', () => {
     });
 
     it('Step 8: User 2 sends message to User 1', async () => {
+      await User.findByIdAndUpdate(user1Id, {
+        'privacySettings.allowMessages': 'everyone'
+      });
+
       const res = await request(app)
         .post('/api/v1/messages')
         .set('Authorization', `Bearer ${user2Token}`)
