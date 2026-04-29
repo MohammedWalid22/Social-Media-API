@@ -124,7 +124,7 @@ npm run test
 
 ## 👨‍💻 Architecture & Engineering By
 **Mohammed Walid**  
-*Jonior Backend Engineer*  
+*Junior Backend Engineer*  
 
 Building sophisticated, resilient, and forward-thinking backend systems.
 
